@@ -19,6 +19,9 @@ class OrderPositionResource extends Resource
 {
     protected static ?string $model = OrderPosition::class;
 
+    // hidden from navigation
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static string |UnitEnum|null $navigationGroup = 'Производство';

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TechCardMaterial extends Model
 {
-    protected $fillable = ['tech_card_id', 'material_id', 'quantity'];
+    protected $fillable = ['shoe_tech_card_id', 'material_id', 'quantity'];
 
     protected function casts(): array
     {
@@ -16,9 +16,9 @@ class TechCardMaterial extends Model
         ];
     }
 
-    public function techCard(): BelongsTo
+    public function shoeTechCard(): BelongsTo
     {
-        return $this->belongsTo(ShoeTechCard::class);
+        return $this->belongsTo(ShoeTechCard::class, 'shoe_tech_card_id');
     }
 
     public function material(): BelongsTo

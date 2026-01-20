@@ -27,7 +27,7 @@ class Material extends Model
 
     public function materialType(): BelongsTo
     {
-        return $this->belongsTo(MaterialType::class)->withDefault([
+        return $this->belongsTo(MaterialType::class, 'material_type_id')->withDefault([
             'name' => 'Тип материала не назначен',
         ]);
     }

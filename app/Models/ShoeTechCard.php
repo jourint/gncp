@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ShoeTechCard extends Model
 {
@@ -57,6 +58,16 @@ class ShoeTechCard extends Model
         return $this->belongsTo(ShoeModel::class);
     }
 
+    public function material(): BelongsTo
+    {
+        return $this->belongsTo(Material::class);
+    }
+
+    public function materials(): HasMany
+    {
+        return $this->hasMany(TechCardMaterial::class);
+    }
+
     public function color(): BelongsTo
     {
         return $this->belongsTo(Color::class);
@@ -70,5 +81,10 @@ class ShoeTechCard extends Model
     public function shoeInsole(): BelongsTo
     {
         return $this->belongsTo(ShoeInsole::class);
+    }
+
+    public function techCardMaterials(): HasMany
+    {
+        return $this->hasMany(TechCardMaterial::class);
     }
 }

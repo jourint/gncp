@@ -9,7 +9,7 @@ class Unit extends Model
 {
     use Sushi;
 
-    protected $primaryKey = 'code';
+    protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'int';
 

@@ -29,17 +29,27 @@ class MaterialsRelationManager extends RelationManager
             ->components([
                 Select::make('material_id')
                     ->label('Материал')
-                    ->relationship('material', 'name')
-                    ->required()
-                    ->searchable()
+                    ->relationship(
+                        name: 'material',
+                        titleAttribute: 'name',
+                        // Добавляем жадную загрузку цвета, чтобы не было 100500 запросов к БД
+                        modifyQueryUsing: fn($query) => $query->with('color')
+                    )
+                    ->getOptionLabelFromRecordUsing(function ($record) {
+                        // Формируем строку: Название (Цвет)
+                        $colorName = $record->color?->name;
+                        return $colorName ? "{$record->name} ({$colorName})" : $record->name;
+                    })
+                    ->searchable(['name']) // Можно добавить и 'color.name' в массив, если версия Filament позволяет
                     ->preload()
+                    ->required()
                     ->live()
                     ->afterStateUpdated(fn($set) => $set('quantity', null)),
 
                 TextInput::make('quantity')
                     ->label('Расход на 1 пару')
                     ->numeric()
-                    ->step(0.01)
+                    ->step(1)
                     ->required()
                     ->suffix(function (callable $get) {
                         $materialId = $get('material_id');
@@ -71,16 +81,16 @@ class MaterialsRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make(),
-                AssociateAction::make(),
+                //    AssociateAction::make(),
             ])
             ->recordActions([
                 EditAction::make(),
-                DissociateAction::make(),
+                //    DissociateAction::make(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DissociateBulkAction::make(),
+                    //    DissociateBulkAction::make(),
                     DeleteBulkAction::make(),
                 ]),
             ]);

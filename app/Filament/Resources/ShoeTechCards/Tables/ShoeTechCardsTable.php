@@ -10,6 +10,7 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use App\Filament\Actions\ReplicateTechCardAction;
 
 class ShoeTechCardsTable
 {
@@ -64,6 +65,7 @@ class ShoeTechCardsTable
             ])
             ->recordActions([
                 EditAction::make(),
+                ReplicateTechCardAction::make()
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -20,6 +20,10 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
+use App\Filament\Actions\ReplicateTechCardAction;
+use Filament\Actions\Action;
+use App\Models\ShoeTechCard;
+
 
 class TechCardsRelationManager extends RelationManager
 {
@@ -93,16 +97,26 @@ class TechCardsRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make(),
-                AssociateAction::make(),
+                //    AssociateAction::make(),
             ])
             ->recordActions([
+                ReplicateTechCardAction::make(),
+                // Кнопка для перехода в "полный" интерфейс техкарты
+                Action::make('edit_full')
+                    ->label('Состав')
+                    ->icon('heroicon-m-beaker') // Иконка колбы или настроек
+                    ->color('warning')
+                    ->url(
+                        fn(ShoeTechCard $record): string =>
+                        \App\Filament\Resources\ShoeTechCards\ShoeTechCardResource::getUrl('edit', ['record' => $record])
+                    ),
                 EditAction::make(),
-                DissociateAction::make(),
+                //    DissociateAction::make(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DissociateBulkAction::make(),
+                    //    DissociateBulkAction::make(),
                     DeleteBulkAction::make(),
                 ]),
             ]);

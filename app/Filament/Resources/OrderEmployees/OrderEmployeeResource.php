@@ -24,7 +24,7 @@ class OrderEmployeeResource extends Resource
     protected static string |UnitEnum|null $navigationGroup = 'Производство';
     protected static ?int $navigationSort = 5;
     protected static ?string $label = 'Задача сотрудника';
-    protected static ?string $pluralLabel = 'Задачь сотрудников';
+    protected static ?string $pluralLabel = 'Задачи сотрудников';
     protected static ?string $navigationLabel = 'Задачи сотрудников';
 
     public static function form(Schema $schema): Schema

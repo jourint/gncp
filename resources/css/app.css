@@ -1,6 +1,15 @@
 @import 'tailwindcss';
 
 @source '../views';
+/* Добавляем эти две строки, чтобы оживить админку */
+/* Импорт базовой темы Filament, чтобы кнопки и панели вернулись */
+@import "../../vendor/filament/filament/resources/css/theme.css";
+
+/* Указываем Tailwind, где искать твои классы */
+@source "../../resources/views/**/*.blade.php";
+@source "../../app/Filament/**/*.php";
+@source "../../vendor/filament/**/*.blade.php";
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 @theme {

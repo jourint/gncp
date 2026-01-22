@@ -42,6 +42,7 @@ class MaterialForm
 
                 TextInput::make('stock_quantity')
                     ->label('Остаток на складе')
+                    ->disabled()
                     ->numeric()
                     ->default(0.00)
                     ->step(0.01)

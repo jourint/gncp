@@ -26,6 +26,11 @@ class OrderPosition extends Model
         return $this->belongsTo(Order::class);
     }
 
+    public function materialLining(): BelongsTo
+    {
+        return $this->belongsTo(MaterialLining::class, 'material_lining_id');
+    }
+
     public function shoeTechCard(): BelongsTo
     {
         return $this->belongsTo(ShoeTechCard::class);
@@ -34,12 +39,5 @@ class OrderPosition extends Model
     public function size(): BelongsTo
     {
         return $this->belongsTo(Size::class);
-    }
-
-    public function getActualSoleAttribute()
-    {
-        return ShoeSole::where('name', $this->shoeTechCard->shoeSole->name)
-            ->where('size_id', $this->size_id)
-            ->first();
     }
 }

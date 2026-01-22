@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('material_types', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();   // Название типа материала
-            $table->unsignedSmallInteger('unit_id')->nullable()->index();  // Единица измерения
-            $table->string('description')->nullable();    // Описание типа материала
+            $table->string('name', 50)->unique();   // Название типа материала
+            $table->unsignedSmallInteger('unit_id')->nullable()->index();  // Единица измерения Sushi
+            $table->string('description', 255)->nullable();    // Описание типа материала
             $table->boolean('is_active')->default(true);    // Активен ли тип материала
         });
     }

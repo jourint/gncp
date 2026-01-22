@@ -9,6 +9,7 @@ class JobPosition extends Model
 {
     use Sushi;
 
+    protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'int';
 

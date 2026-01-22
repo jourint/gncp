@@ -18,6 +18,7 @@ class WorkDistribution extends Page
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
     protected string $view = 'filament.pages.work-distribution';
     protected static ?string $title = 'АРМ - Распределение работы';
+    protected static ?int $navigationSort = 2;
 
     public ?string $selected_date = null;
     public ?int $selected_employee_id = null;

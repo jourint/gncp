@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Material extends Model
 {
@@ -21,32 +22,23 @@ class Material extends Model
             'is_active' => 'boolean',
             'material_type_id' => 'integer',
             'color_id' => 'integer',
-            'stock_quantity' => 'float',
+            'stock_quantity' => 'decimal:2',
         ];
     }
 
     public function materialType(): BelongsTo
     {
-        return $this->belongsTo(MaterialType::class, 'material_type_id')->withDefault([
-            'name' => 'Тип материала не назначен',
-        ]);
+        return $this->belongsTo(MaterialType::class, 'material_type_id');
     }
 
     public function color(): BelongsTo
     {
-        return $this->belongsTo(Color::class); // ->withDefault([ 'name' => 'Цвет не назначен',]);
+        return $this->belongsTo(Color::class)->withDefault(['name' => 'Цвет не назначен']);
     }
 
-    public function texture(): BelongsTo
+    public function movements(): MorphMany
     {
-        return $this->belongsTo(MaterialTexture::class, 'texture_id');
-    }
-
-    public function unit(): BelongsTo
-    {
-        return $this->belongsTo(Unit::class, 'unit_id')->withDefault([
-            'name' => 'Ед. изм. не назначена',
-        ]);
+        return $this->morphMany(MaterialMovement::class, 'movable');
     }
 
     public function addStock(float $amount): void
@@ -64,16 +56,10 @@ class Material extends Model
         $this->decrement('stock_quantity', $amount);
     }
 
-    public function movements()
+    public function getFullNameAttribute()
     {
-        return $this->morphMany(MaterialMovement::class, 'movable');
-    }
-
-    public function getDisplayNameAttribute()
-    {
-        $texture = $this->texture ? " ({$this->texture->name})" : "";
-
-        // Результат: Кожа (флотар) красный
-        return "{$this->materialType->name}{$texture} {$this->color->name}";
+        $colorName = $this->color?->name;
+        $baseName = $this->name;
+        return $baseName . ($colorName ? " ({$colorName})" : "");
     }
 }

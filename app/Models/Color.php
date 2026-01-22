@@ -11,6 +11,14 @@ class Color extends Model
     public $timestamps = false;
     protected $fillable = ['name', 'hex'];
 
+    protected function casts(): array
+    {
+        return [
+            'name' => 'string',
+            'hex' => 'string',
+        ];
+    }
+
     public function shoeTechCards(): HasMany
     {
         return $this->hasMany(ShoeTechCard::class);
@@ -28,5 +36,10 @@ class Color extends Model
     public function shoeInsoles(): HasMany
     {
         return $this->hasMany(ShoeInsole::class);
+    }
+
+    public function materialLinings(): HasMany
+    {
+        return $this->hasMany(MaterialLining::class);
     }
 }

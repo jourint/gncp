@@ -40,7 +40,7 @@ class MaterialTypeResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\MaterialsRelationManager::class,
         ];
     }
 

@@ -13,12 +13,11 @@ return new class extends Migration
     {
         Schema::create('shoe_insoles', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 50)->index(); // Код резака для стельки
-            $table->boolean('is_black')->default(true); // Черная расцветка, 0 - нет, 1 - да
-            $table->boolean('is_active')->default(true);    // Активна ли стелька
-            $table->jsonb('tech_card')->nullable(); // Технические карты в формате JSON
+            $table->string('name', 50)->unique(); // например: 513 Вкладная, 168 обтяжная
+            $table->boolean('is_soft_texon')->default(false); // жёсткий или мягкий тексон
+            $table->boolean('has_egg')->default(false); // нужна ли "яичка"
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
-            $table->unique(['name', 'is_black'], 'shoe_insole_name_black_unique');
         });
     }
 

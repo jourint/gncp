@@ -21,6 +21,7 @@ class Order extends Model
         return [
             'started_at' => 'date',
             'status' => OrderStatus::class,
+            'comment' => 'string',
         ];
     }
 

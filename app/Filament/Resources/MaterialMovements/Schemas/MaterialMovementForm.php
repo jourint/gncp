@@ -46,11 +46,11 @@ class MaterialMovementForm
 
                 Select::make('type')
                     ->label('Тип операции')
-                    ->options([
-                        'income' => 'Приход',
-                        'outcome' => 'Расход',
-                        'write-off' => 'Списание',
-                    ])
+                    ->options(
+                        collect(MovementType::cases())
+                            ->mapWithKeys(fn(MovementType $type) => [$type->value => $type->label()])
+                            ->toArray()
+                    )
                     ->required()
                     ->native(false),
 

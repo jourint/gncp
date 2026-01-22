@@ -22,6 +22,7 @@ use App\Models\ShoeTechCard;
 class PositionsRelationManager extends RelationManager
 {
     protected static string $relationship = 'positions';
+    protected static ?string $title = 'Позиции заказа';
 
     public function form(Schema $schema): Schema
     {

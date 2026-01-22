@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('counters', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->string('name', 30)->unique();
+            $table->string('description', 100)->nullable();
         });
     }
 

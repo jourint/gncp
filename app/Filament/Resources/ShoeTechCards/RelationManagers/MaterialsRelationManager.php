@@ -16,11 +16,11 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use App\Models\Material;
 
 class MaterialsRelationManager extends RelationManager
 {
     protected static string $relationship = 'materials';
-
     protected static ?string $title = 'Состав (Материалы)';
 
     public function form(Schema $schema): Schema
@@ -36,9 +36,7 @@ class MaterialsRelationManager extends RelationManager
                         modifyQueryUsing: fn($query) => $query->with('color')
                     )
                     ->getOptionLabelFromRecordUsing(function ($record) {
-                        // Формируем строку: Название (Цвет)
-                        $colorName = $record->color?->name;
-                        return $colorName ? "{$record->name} ({$colorName})" : $record->name;
+                        return $record->full_name;
                     })
                     ->searchable(['name']) // Можно добавить и 'color.name' в массив, если версия Filament позволяет
                     ->preload()
@@ -55,7 +53,7 @@ class MaterialsRelationManager extends RelationManager
                         $materialId = $get('material_id');
                         if (!$materialId) return '';
 
-                        $material = \App\Models\Material::with('materialType.unit')->find($materialId);
+                        $material = Material::with('materialType.unit')->find($materialId);
                         return $material?->materialType?->unit?->name ?? 'ед.';
                     }),
             ]);
@@ -67,7 +65,8 @@ class MaterialsRelationManager extends RelationManager
             ->recordTitleAttribute('material.name')
             ->columns([
                 TextColumn::make('material.name')
-                    ->label('Материал'),
+                    ->label('Материал')
+                    ->formatStateUsing(fn($record) => $record->material->full_name),
 
                 TextColumn::make('quantity')
                     ->label('Расход')

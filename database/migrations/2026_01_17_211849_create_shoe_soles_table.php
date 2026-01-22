@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('shoe_soles', function (Blueprint $table) {
             $table->id();
             $table->string('name', 50)->index(); // Код подошвы
-            $table->foreignId('color_id')->constrained('colors')->nullOnDelete();   // Цвет подошвы
+            $table->foreignId('color_id')->constrained('colors')->restrictOnDelete();   // Цвет подошвы
             $table->boolean('is_active')->default(true);    // Активен ли подошва
             $table->timestamps();
             $table->unique(['name', 'color_id'], 'unique_shoe_sole');

@@ -11,8 +11,10 @@ class Workflow extends Model
     protected function casts(): array
     {
         return [
+            'name' => 'string',
+            'description' => 'string',
             'is_active' => 'boolean',
-            'price' => 'float',
+            'price' => 'decimal:2',
         ];
     }
 }

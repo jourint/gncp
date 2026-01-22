@@ -22,6 +22,7 @@ class OperatorOrderConsole extends Page
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedComputerDesktop;
     protected string $view = 'filament.pages.operator-order-console';
     protected static ?string $title = 'АРМ - Создание заказа';
+    protected static ?int $navigationSort = 1;
 
     // Свойства компонента
     public ?int $customer_id = null;

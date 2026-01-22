@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name', 50)->unique();  // Название типа обуви
             $table->boolean('is_active')->default(true);   // Активен ли тип обуви
-            $table->decimal('price_cutting', 5, 2)->default(0.00); // Цена за раскрой
-            $table->decimal('price_sewing', 5, 2)->default(0.00); // Цена за пошив
-            $table->decimal('price_shoemaker', 5, 2)->default(0.00);    // Цена за сапожник
+            $table->decimal('price_cutting', 7, 2)->default(0.00); // Цена за раскрой
+            $table->decimal('price_sewing', 7, 2)->default(0.00); // Цена за пошив
+            $table->decimal('price_shoemaker', 7, 2)->default(0.00);    // Цена за сапожник
             $table->timestamps();
         });
     }

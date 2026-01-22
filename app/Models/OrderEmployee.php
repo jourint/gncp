@@ -21,7 +21,7 @@ class OrderEmployee extends Model
     {
         return [
             'quantity' => 'integer',
-            'price_per_pair' => 'float',
+            'price_per_pair' => 'decimal:2',
             'is_paid' => 'boolean',
         ];
     }
@@ -29,9 +29,8 @@ class OrderEmployee extends Model
     protected static function booted()
     {
         static::updating(function ($item) {
-            // Если запись оплачена — отменяем обновление
-            if ($item->is_paid) {
-                return false;
+            if ($item->is_paid && $item->isDirty()) {
+                throw new \Exception('Оплаченную запись нельзя изменять.');
             }
         });
     }
@@ -58,6 +57,6 @@ class OrderEmployee extends Model
 
     public function getIsPaidLabelAttribute()
     {
-        return $this->isPaid ? 'Да' : 'Нет';
+        return $this->isPaid ? 'Оплачено' : 'Ожидает оплаты';
     }
 }

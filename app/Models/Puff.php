@@ -3,15 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\hasMany;
 
 class Puff extends Model
 {
     public $timestamps = false;
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'description'];
 
-    public function shoeModels(): BelongsToMany
+    protected function casts(): array
     {
-        return $this->belongsToMany(ShoeModel::class);
+        return [
+            'name' => 'string',
+            'description' => 'string',
+        ];
+    }
+
+    public function shoeModels(): hasMany
+    {
+        return $this->hasMany(ShoeModel::class);
     }
 }

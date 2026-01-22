@@ -17,6 +17,8 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use App\Models\Size;
+use App\Filament\Actions\ReplicateShoeSoleItemToNextSizeAction;
+use App\Filament\Actions\CreateAllSizesForShoeSoleAction;
 
 class ItemsRelationManager extends RelationManager
 {
@@ -72,16 +74,18 @@ class ItemsRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make(),
-                AssociateAction::make(),
+                CreateAllSizesForShoeSoleAction::make()->record($this->getOwnerRecord()),
+                //    AssociateAction::make(),
             ])
             ->recordActions([
+                ReplicateShoeSoleItemToNextSizeAction::make(),
                 EditAction::make(),
-                DissociateAction::make(),
+                //    DissociateAction::make(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DissociateBulkAction::make(),
+                    //    DissociateBulkAction::make(),
                     DeleteBulkAction::make(),
                 ]),
             ]);

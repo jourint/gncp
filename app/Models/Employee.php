@@ -13,9 +13,11 @@ class Employee extends Model
     protected function casts(): array
     {
         return [
+            'name' => 'string',
+            'phone' => 'string',
             'job_position_id' => 'integer',
             'is_active' => 'boolean',
-            'skill_level' => 'float',
+            'skill_level' => 'decimal:2',
         ];
     }
 
@@ -26,9 +28,6 @@ class Employee extends Model
         ]);
     }
 
-    /**
-     * Работы, назначенные сотруднику
-     */
     public function orderEmployees(): HasMany
     {
         return $this->hasMany(OrderEmployee::class, 'employee_id');

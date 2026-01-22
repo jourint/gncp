@@ -23,10 +23,12 @@ class MaterialMovement extends Model
     {
         return [
             'type' => MovementType::class,
-            'quantity' => 'float',
+            'description' => 'string',
+            'quantity' => 'decimal:2',
             'user_id' => 'integer',
         ];
     }
+
     public function movable(): MorphTo
     {
         return $this->morphTo();

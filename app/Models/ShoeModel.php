@@ -12,6 +12,7 @@ class ShoeModel extends Model
         'name',
         'description',
         'shoe_type_id',
+        'shoe_insole_id',
         'price_coeff_cutting',
         'price_coeff_sewing',
         'price_coeff_shoemaker',
@@ -40,6 +41,11 @@ class ShoeModel extends Model
     public function techCards(): HasMany
     {
         return $this->hasMany(ShoeTechCard::class);
+    }
+
+    public function shoeInsole(): BelongsTo
+    {
+        return $this->belongsTo(ShoeInsole::class);
     }
 
     public function counter(): BelongsTo

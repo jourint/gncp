@@ -12,14 +12,14 @@ class ShoeSole extends Model
         'name',
         'color_id',
         'is_active',
-        //    'stock_quantity',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean',
+            'name' => 'string',
             'color_id' => 'integer',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -30,8 +30,6 @@ class ShoeSole extends Model
 
     public function color(): BelongsTo
     {
-        return $this->belongsTo(Color::class)->withDefault([
-            'name' => 'Цвет не назначен',
-        ]);
+        return $this->belongsTo(Color::class);
     }
 }

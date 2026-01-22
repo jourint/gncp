@@ -38,7 +38,11 @@ class ShoeInsoleForm
                     ->schema([
                         Select::make('material_id')
                             ->label('Материал')
-                            ->options(Material::all()->pluck('name', 'id'))
+                            ->options(
+                                Material::with(['color', 'materialType.unit'])
+                                    ->get()
+                                    ->pluck('full_name', 'id') // ← Используем атрибут full_name
+                            )
                             ->required()
                             ->searchable()
                             ->reactive()
@@ -47,11 +51,8 @@ class ShoeInsoleForm
                                     $set('material_unit', null);
                                     return;
                                 }
-
-                                // Используем вашу новую связь unit() через тип материала
-                                $material = Material::find($state);
+                                $material = Material::with('materialType.unit')->find($state);
                                 $unitId = $material?->materialType?->unit_id;
-
                                 $set('material_unit', $unitId);
                             })
                             ->columnSpan(2),
@@ -73,7 +74,7 @@ class ShoeInsoleForm
                     ->columns(4)
                     ->itemLabel(
                         fn(array $state): ?string =>
-                        Material::find($state['material_id'] ?? null)?->name ?? 'Новый компонент'
+                        Material::find($state['material_id'] ?? null)?->full_name ?? 'Новый компонент'
                     )
                     ->collapsible()
                     ->defaultItems(0)

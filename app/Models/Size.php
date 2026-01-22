@@ -9,6 +9,7 @@ class Size extends Model
 {
     use Sushi;
 
+    protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'int';
 
@@ -22,12 +23,4 @@ class Size extends Model
         ['id' => 42, 'name' => '42'],
         ['id' => 43, 'name' => '43'],
     ];
-
-
-    /*protected function sizes(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => Size::whereIn('id', $this->available_sizes ?? [])->get(),
-        );
-    }*/
 }

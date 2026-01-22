@@ -27,9 +27,7 @@ class ShoeSoleItem extends Model
 
     public function size(): BelongsTo
     {
-        return $this->belongsTo(Size::class)->withDefault([
-            'name' => 'Размер не назначен',
-        ]);
+        return $this->belongsTo(Size::class);
     }
 
     public function addStock(int $amount): void

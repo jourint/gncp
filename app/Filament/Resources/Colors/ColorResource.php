@@ -9,6 +9,7 @@ use App\Filament\Resources\Colors\Schemas\ColorForm;
 use App\Filament\Resources\Colors\Tables\ColorsTable;
 use App\Models\Color;
 use BackedEnum;
+use Filament\Resources\RelationManagers\RelationManager;
 use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -41,7 +42,7 @@ class ColorResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\TechCardsRelationManager::class,
         ];
     }
 

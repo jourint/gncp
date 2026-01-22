@@ -14,12 +14,12 @@ class Unit extends Model
     protected $keyType = 'int';
 
     protected $rows = [
-        ['id' => 1, 'code' => 'cm', 'name' => 'сантиметр'],
-        ['id' => 2, 'code' => 'pcs', 'name' => 'штука'],
-        ['id' => 3, 'code' => 'dm2', 'name' => 'дециметр квадратный'],
-        ['id' => 4, 'code' => 'm', 'name' => 'метр'],
-        ['id' => 5, 'code' => 'kg', 'name' => 'килограмм'],
+        ['id' => 0, 'name' => 'отсутствует', 'label' => 'нет'],
+        ['id' => 1, 'name' => 'сантиметр', 'label' => 'см.'],
+        ['id' => 2, 'name' => 'штука', 'label' => 'шт.'],
+        ['id' => 3, 'name' => 'дециметр квадратный', 'label' => 'дцм.2'],
+        ['id' => 4, 'name' => 'метр', 'label' => 'м.'],
+        ['id' => 5, 'name' => 'пара', 'label' => 'пара'],
+        ['id' => 6, 'name' => 'миллилитр', 'label' => 'мл.'],
     ];
-    // $unitOptions = Unit::all()->pluck('name', 'id');
-
 }

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained('customers')->restrictOnDelete();    // Клиент
             $table->date('started_at')->index();    // Дата начала заказа
             $table->string('status', 10)->default(OrderStatus::Pending->value);    // Статус заказа
-            $table->text('comment')->nullable();    // Комментарий к заказу
+            $table->string('comment', 255)->nullable();    // Комментарий к заказу
 
             $table->timestamps();
         });

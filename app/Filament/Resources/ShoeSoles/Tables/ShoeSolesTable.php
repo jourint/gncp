@@ -19,7 +19,7 @@ class ShoeSolesTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Код')
+                    ->label('Код подошвы')
                     ->searchable()
                     ->sortable(),
 
@@ -35,10 +35,12 @@ class ShoeSolesTable
                     ->boolean(),
 
                 TextColumn::make('created_at')
+                    ->label('Дата создания')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Дата обновления')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

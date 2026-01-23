@@ -13,7 +13,12 @@ class PuffForm
             ->components([
                 TextInput::make('name')
                     ->label('Название')
-                    ->required(),
+                    ->required()
+                    ->maxLength(50),
+
+                TextInput::make('description')
+                    ->label('Описание')
+                    ->columnSpanFull(),
             ]);
     }
 }

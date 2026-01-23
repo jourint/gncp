@@ -20,12 +20,12 @@ class TechCardMaterialResource extends Resource
     protected static ?string $model = TechCardMaterial::class;
 
     // hidden from navigation
-    protected static bool $shouldRegisterNavigation = false;
+    // protected static bool $shouldRegisterNavigation = false;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static string |UnitEnum|null $navigationGroup = 'Производство';
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 98;
     protected static ?string $label = 'Состав тех-карты';
     protected static ?string $pluralLabel = 'Состав тех-карт';
     protected static ?string $navigationLabel = 'Состав тех-карт';

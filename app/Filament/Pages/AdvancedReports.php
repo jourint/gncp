@@ -14,7 +14,9 @@ use App\Models\Counter;
 use App\Models\Puff;
 use App\Models\Workflow;
 use App\Models\Material;
+use App\Models\MaterialLining;
 use App\Models\TechCardMaterial;
+use App\Enums\InsolesType;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +27,7 @@ class AdvancedReports extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
     protected string $view = 'filament.pages.advanced-reports';
-    protected static ?string $title = 'АРМ - Продвинутые отчеты 2';
+    protected static ?string $title = 'АРМ - Отчеты по заказам';
     protected static ?int $navigationSort = 4;
 
     public ?string $selected_date = null;
@@ -49,9 +51,11 @@ class AdvancedReports extends Page
             ->join('orders', 'order_positions.order_id', '=', 'orders.id')
             ->join('shoe_tech_cards', 'order_positions.shoe_tech_card_id', '=', 'shoe_tech_cards.id')
             ->join('shoe_models', 'shoe_tech_cards.shoe_model_id', '=', 'shoe_models.id')
+            ->leftJoin('material_linings', 'order_positions.material_lining_id', '=', 'material_linings.id')
             ->select(
                 'shoe_models.name as model_name',
                 'shoe_tech_cards.name as full_color_texture',
+                'material_linings.id as lining_id',
                 'order_positions.size_id',
                 DB::raw('SUM(order_positions.quantity) as total_quantity')
             )
@@ -59,40 +63,50 @@ class AdvancedReports extends Page
             ->groupBy([
                 'shoe_models.name',
                 'shoe_tech_cards.name',
+                'material_linings.id',
                 'order_positions.size_id'
             ])
             ->orderBy('shoe_models.name')
             ->orderBy('shoe_tech_cards.name')
+            ->orderBy(DB::raw('COALESCE(material_linings.id, 0)'))
             ->orderBy('order_positions.size_id')
             ->get();
 
-        $grouped = $result->groupBy('model_name');
+        $grouped = $result->groupBy(['model_name', 'full_color_texture', 'lining_id']);
 
         $final = collect();
         $overallTotal = 0;
 
-        foreach ($grouped as $modelName => $itemsByModel) {
-            $byTechCard = $itemsByModel->groupBy('full_color_texture');
-
+        foreach ($grouped as $modelGroup) {
             $modelTotal = 0;
 
-            foreach ($byTechCard as $techCardName => $items) {
-                $techCardTotal = $items->sum('total_quantity');
-                $modelTotal += $techCardTotal;
-                $overallTotal += $techCardTotal;
+            foreach ($modelGroup as $techCardGroup) {
+                foreach ($techCardGroup as $liningId => $items) {
+                    $techCardTotal = $items->sum('total_quantity');
+                    $modelTotal += $techCardTotal;
+                    $overallTotal += $techCardTotal;
 
-                $final->push([
-                    'type' => 'tech_card_header',
-                    'model_name' => $modelName,
-                    'tech_card_name' => $techCardName,
-                    'total_quantity' => $techCardTotal,
-                    'sizes' => $items->sortBy('size_id')->values()
-                ]);
+                    $techCardName = $items->first()->full_color_texture;
+                    if ($liningId) {
+                        $lining = MaterialLining::find($liningId);
+                        if ($lining) {
+                            $techCardName .= ' / ' . $lining->fullName;
+                        }
+                    }
+
+                    $final->push([
+                        'type' => 'tech_card_header',
+                        'model_name' => $items->first()->model_name,
+                        'tech_card_name' => $techCardName,
+                        'total_quantity' => $techCardTotal,
+                        'sizes' => $items->sortBy('size_id')->values()
+                    ]);
+                }
             }
 
             $final->push([
                 'type' => 'model_total',
-                'model_name' => $modelName,
+                'model_name' => $items->first()->model_name ?? $items->last()->model_name,
                 'total_quantity' => $modelTotal
             ]);
         }
@@ -114,47 +128,58 @@ class AdvancedReports extends Page
             ->join('order_positions', 'order_employees.order_position_id', '=', 'order_positions.id')
             ->join('shoe_tech_cards', 'order_positions.shoe_tech_card_id', '=', 'shoe_tech_cards.id')
             ->join('shoe_models', 'shoe_tech_cards.shoe_model_id', '=', 'shoe_models.id')
+            ->leftJoin('material_linings', 'order_positions.material_lining_id', '=', 'material_linings.id')
             ->select(
                 'employees.name as employee_name',
                 'shoe_tech_cards.name as tech_card_name',
+                'material_linings.id as lining_id',
                 'order_positions.size_id',
                 DB::raw('SUM(order_employees.quantity) as total_quantity')
             )
             ->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
             ->whereHas('employee', fn($q) => $q->where('job_position_id', 2)) // 2 — швейный
-            ->groupBy(['employees.name', 'shoe_tech_cards.name', 'order_positions.size_id'])
+            ->groupBy(['employees.name', 'shoe_tech_cards.name', 'material_linings.id', 'order_positions.size_id'])
             ->orderBy('employees.name')
             ->orderBy('shoe_tech_cards.name')
+            ->orderBy(DB::raw('COALESCE(material_linings.id, 0)'))
             ->orderBy('order_positions.size_id')
             ->get();
 
-        $grouped = $result->groupBy('employee_name');
+        $grouped = $result->groupBy(['employee_name', 'tech_card_name', 'lining_id']);
 
         $final = collect();
         $overallTotal = 0;
 
-        foreach ($grouped as $employeeName => $itemsByEmployee) {
-            $byTechCard = $itemsByEmployee->groupBy('tech_card_name');
-
+        foreach ($grouped as $empGroup) {
             $employeeTotal = 0;
 
-            foreach ($byTechCard as $techCardName => $items) {
-                $techCardTotal = $items->sum('total_quantity');
-                $employeeTotal += $techCardTotal;
-                $overallTotal += $techCardTotal;
+            foreach ($empGroup as $techCardGroup) {
+                foreach ($techCardGroup as $liningId => $items) {
+                    $techCardTotal = $items->sum('total_quantity');
+                    $employeeTotal += $techCardTotal;
+                    $overallTotal += $techCardTotal;
 
-                $final->push([
-                    'type' => 'tech_card_header',
-                    'employee_name' => $employeeName,
-                    'tech_card_name' => $techCardName,
-                    'total_quantity' => $techCardTotal,
-                    'sizes' => $items->sortBy('size_id')->values()
-                ]);
+                    $techCardName = $items->first()->tech_card_name;
+                    if ($liningId) {
+                        $lining = MaterialLining::find($liningId);
+                        if ($lining) {
+                            $techCardName .= ' / ' . $lining->fullName;
+                        }
+                    }
+
+                    $final->push([
+                        'type' => 'tech_card_header',
+                        'employee_name' => $items->first()->employee_name,
+                        'tech_card_name' => $techCardName,
+                        'total_quantity' => $techCardTotal,
+                        'sizes' => $items->sortBy('size_id')->values()
+                    ]);
+                }
             }
 
             $final->push([
                 'type' => 'employee_total',
-                'employee_name' => $employeeName,
+                'employee_name' => $items->first()->employee_name ?? $items->last()->employee_name,
                 'total_quantity' => $employeeTotal
             ]);
         }
@@ -176,47 +201,58 @@ class AdvancedReports extends Page
             ->join('order_positions', 'order_employees.order_position_id', '=', 'order_positions.id')
             ->join('shoe_tech_cards', 'order_positions.shoe_tech_card_id', '=', 'shoe_tech_cards.id')
             ->join('shoe_models', 'shoe_tech_cards.shoe_model_id', '=', 'shoe_models.id')
+            ->leftJoin('material_linings', 'order_positions.material_lining_id', '=', 'material_linings.id')
             ->select(
                 'employees.name as employee_name',
                 'shoe_tech_cards.name as tech_card_name',
+                'material_linings.id as lining_id',
                 'order_positions.size_id',
                 DB::raw('SUM(order_employees.quantity) as total_quantity')
             )
             ->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
             ->whereHas('employee', fn($q) => $q->where('job_position_id', 3)) // 3 — сапожный
-            ->groupBy(['employees.name', 'shoe_tech_cards.name', 'order_positions.size_id'])
+            ->groupBy(['employees.name', 'shoe_tech_cards.name', 'material_linings.id', 'order_positions.size_id'])
             ->orderBy('employees.name')
             ->orderBy('shoe_tech_cards.name')
+            ->orderBy(DB::raw('COALESCE(material_linings.id, 0)'))
             ->orderBy('order_positions.size_id')
             ->get();
 
-        $grouped = $result->groupBy('employee_name');
+        $grouped = $result->groupBy(['employee_name', 'tech_card_name', 'lining_id']);
 
         $final = collect();
         $overallTotal = 0;
 
-        foreach ($grouped as $employeeName => $itemsByEmployee) {
-            $byTechCard = $itemsByEmployee->groupBy('tech_card_name');
-
+        foreach ($grouped as $empGroup) {
             $employeeTotal = 0;
 
-            foreach ($byTechCard as $techCardName => $items) {
-                $techCardTotal = $items->sum('total_quantity');
-                $employeeTotal += $techCardTotal;
-                $overallTotal += $techCardTotal;
+            foreach ($empGroup as $techCardGroup) {
+                foreach ($techCardGroup as $liningId => $items) {
+                    $techCardTotal = $items->sum('total_quantity');
+                    $employeeTotal += $techCardTotal;
+                    $overallTotal += $techCardTotal;
 
-                $final->push([
-                    'type' => 'tech_card_header',
-                    'employee_name' => $employeeName,
-                    'tech_card_name' => $techCardName,
-                    'total_quantity' => $techCardTotal,
-                    'sizes' => $items->sortBy('size_id')->values()
-                ]);
+                    $techCardName = $items->first()->tech_card_name;
+                    if ($liningId) {
+                        $lining = MaterialLining::find($liningId);
+                        if ($lining) {
+                            $techCardName .= ' / ' . $lining->fullName;
+                        }
+                    }
+
+                    $final->push([
+                        'type' => 'tech_card_header',
+                        'employee_name' => $items->first()->employee_name,
+                        'tech_card_name' => $techCardName,
+                        'total_quantity' => $techCardTotal,
+                        'sizes' => $items->sortBy('size_id')->values()
+                    ]);
+                }
             }
 
             $final->push([
                 'type' => 'employee_total',
-                'employee_name' => $employeeName,
+                'employee_name' => $items->first()->employee_name ?? $items->last()->employee_name,
                 'total_quantity' => $employeeTotal
             ]);
         }
@@ -233,25 +269,53 @@ class AdvancedReports extends Page
     {
         if ($this->active_report !== 'miscellaneous') return [
             'stelki' => collect(),
+            'eggs' => collect(),
             'puffCounter' => collect(),
             'workflows' => collect(),
         ];
 
-        // Стельки
+        // Стельки: теперь учитываем тип (вкладная/обтяжная) и подкладку
         $stelki = OrderPosition::query()
             ->join('shoe_tech_cards', 'order_positions.shoe_tech_card_id', '=', 'shoe_tech_cards.id')
-            ->join('shoe_insoles', 'shoe_tech_cards.shoe_insole_id', '=', 'shoe_insoles.id')
+            ->join('shoe_models', 'shoe_tech_cards.shoe_model_id', '=', 'shoe_models.id')
+            ->join('shoe_insoles', 'shoe_models.shoe_insole_id', '=', 'shoe_insoles.id')
+            ->leftJoin('material_linings', 'order_positions.material_lining_id', '=', 'material_linings.id')
             ->select(
                 'shoe_insoles.name',
-                'shoe_insoles.is_black',
+                'shoe_insoles.type',
+                'shoe_insoles.is_soft_texon',
+                'material_linings.id as lining_id',
                 'order_positions.size_id',
                 DB::raw('SUM(order_positions.quantity) as total_quantity')
             )
             ->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
-            ->groupBy(['shoe_insoles.name', 'shoe_insoles.is_black', 'order_positions.size_id'])
+            ->groupBy([
+                'shoe_insoles.name',
+                'shoe_insoles.type',
+                'shoe_insoles.is_soft_texon',
+                'material_linings.id',
+                'order_positions.size_id'
+            ])
             ->orderBy('shoe_insoles.name')
-            ->orderBy('shoe_insoles.is_black')
+            ->orderBy('shoe_insoles.type')
+            ->orderBy(DB::raw('COALESCE(material_linings.id, 0)'))
             ->orderBy('order_positions.size_id')
+            ->get();
+
+        // Яички: если has_egg, то количество = кол-во пар × цвет техкарты
+        $eggs = OrderPosition::query()
+            ->join('shoe_tech_cards', 'order_positions.shoe_tech_card_id', '=', 'shoe_tech_cards.id')
+            ->join('shoe_models', 'shoe_tech_cards.shoe_model_id', '=', 'shoe_models.id')
+            ->join('shoe_insoles', 'shoe_models.shoe_insole_id', '=', 'shoe_insoles.id')
+            ->join('colors', 'shoe_tech_cards.color_id', '=', 'colors.id') // цвет техкарты
+            ->select(
+                'colors.name as color_name',
+                'shoe_tech_cards.color_id',
+                DB::raw('SUM(order_positions.quantity) as total_quantity')
+            )
+            ->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
+            ->where('shoe_insoles.has_egg', true)
+            ->groupBy(['shoe_tech_cards.color_id', 'colors.name'])
             ->get();
 
         // Подноски/Задники
@@ -279,7 +343,6 @@ class AdvancedReports extends Page
             ->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
             ->get(['shoe_models.name as model_name', 'shoe_models.workflows', 'order_positions.quantity']);
 
-        // Группируем и фильтруем
         $workflows = collect();
         foreach ($workflowsRaw as $item) {
             $wfArray = is_string($item->workflows) ? json_decode($item->workflows, true) : $item->workflows;
@@ -294,7 +357,6 @@ class AdvancedReports extends Page
             }
         }
 
-        // Группируем по workflow_id
         $groupedWorkflows = $workflows->groupBy('workflow_id')
             ->map(function ($items) {
                 $first = $items->first();
@@ -308,6 +370,7 @@ class AdvancedReports extends Page
 
         return [
             'stelki' => $stelki,
+            'eggs' => $eggs,
             'puffCounter' => $puffCounter,
             'workflows' => $groupedWorkflows,
         ];
@@ -322,10 +385,12 @@ class AdvancedReports extends Page
             ->join('customers', 'orders.customer_id', '=', 'customers.id')
             ->join('shoe_tech_cards', 'order_positions.shoe_tech_card_id', '=', 'shoe_tech_cards.id')
             ->join('shoe_models', 'shoe_tech_cards.shoe_model_id', '=', 'shoe_models.id')
+            ->leftJoin('material_linings', 'order_positions.material_lining_id', '=', 'material_linings.id')
             ->select(
                 'customers.name as customer_name',
                 'shoe_models.name as model_name',
-                'shoe_tech_cards.name as full_color_texture', // ← Используем это поле
+                'shoe_tech_cards.name as full_color_texture',
+                'material_linings.id as lining_id',
                 'order_positions.size_id',
                 DB::raw('SUM(order_positions.quantity) as total_quantity')
             )
@@ -333,45 +398,65 @@ class AdvancedReports extends Page
             ->groupBy([
                 'customers.name',
                 'shoe_models.name',
-                'shoe_tech_cards.name', // ← Важно!
+                'shoe_tech_cards.name',
+                'material_linings.id',
                 'order_positions.size_id'
             ])
             ->orderBy('customers.name')
             ->orderBy('shoe_models.name')
             ->orderBy('shoe_tech_cards.name')
+            ->orderBy(DB::raw('COALESCE(material_linings.id, 0)'))
             ->orderBy('order_positions.size_id')
             ->get();
 
-        $grouped = $result->groupBy('customer_name');
+        $grouped = $result->groupBy(['customer_name', 'model_name', 'full_color_texture', 'lining_id']);
 
         $final = collect();
         $overallTotal = 0;
 
-        foreach ($grouped as $customerName => $itemsByCustomer) {
-            $byModel = $itemsByCustomer->groupBy(['model_name', 'full_color_texture']); // ← Группируем по модели и цвету
-
+        foreach ($grouped as $custGroup) {
             $customerTotal = 0;
 
-            foreach ($byModel as $modelGroup) {
-                foreach ($modelGroup as $techCardName => $items) {
-                    $techCardTotal = $items->sum('total_quantity');
-                    $customerTotal += $techCardTotal;
-                    $overallTotal += $techCardTotal;
+            foreach ($custGroup as $modelGroup) {
+                $modelTotal = 0;
 
-                    $final->push([
-                        'type' => 'model_header',
-                        'customer_name' => $customerName,
-                        'model_name' => $items->first()->model_name,
-                        'tech_card_name' => $techCardName, // ← Полное название: "Модель / Цвет"
-                        'total_quantity' => $techCardTotal,
-                        'sizes' => $items->sortBy('size_id')->values()
-                    ]);
+                foreach ($modelGroup as $techGroup) {
+                    foreach ($techGroup as $liningId => $items) {
+                        $techCardTotal = $items->sum('total_quantity');
+                        $modelTotal += $techCardTotal;
+                        $customerTotal += $techCardTotal;
+                        $overallTotal += $techCardTotal;
+
+                        $techCardName = $items->first()->full_color_texture;
+                        if ($liningId) {
+                            $lining = MaterialLining::find($liningId);
+                            if ($lining) {
+                                $techCardName .= ' / ' . $lining->fullName;
+                            }
+                        }
+
+                        $final->push([
+                            'type' => 'model_header',
+                            'customer_name' => $items->first()->customer_name,
+                            'model_name' => $items->first()->model_name,
+                            'tech_card_name' => $techCardName,
+                            'total_quantity' => $techCardTotal,
+                            'sizes' => $items->sortBy('size_id')->values()
+                        ]);
+                    }
                 }
+
+                $final->push([
+                    'type' => 'customer_model_total',
+                    'customer_name' => $items->first()->customer_name ?? $items->last()->customer_name,
+                    'model_name' => $items->first()->model_name,
+                    'total_quantity' => $modelTotal
+                ]);
             }
 
             $final->push([
                 'type' => 'customer_total',
-                'customer_name' => $customerName,
+                'customer_name' => $items->first()->customer_name ?? $items->last()->customer_name,
                 'total_quantity' => $customerTotal
             ]);
         }
@@ -395,19 +480,19 @@ class AdvancedReports extends Page
 
         $targetDate = $this->selected_date;
 
-        // 1. Получаем все позиции заказов на дату
         $orderPositions = OrderPosition::query()
             ->join('orders', 'order_positions.order_id', '=', 'orders.id')
             ->join('shoe_tech_cards', 'order_positions.shoe_tech_card_id', '=', 'shoe_tech_cards.id')
+            ->join('shoe_models', 'shoe_tech_cards.shoe_model_id', '=', 'shoe_models.id')
             ->select(
                 'shoe_tech_cards.id as tech_card_id',
-                'shoe_tech_cards.shoe_insole_id',
+                'shoe_models.shoe_insole_id',
+                'order_positions.material_lining_id',
                 'order_positions.quantity as pairs_needed'
             )
             ->where('orders.started_at', $targetDate)
             ->get();
 
-        // 2. Собираем материалы
         $materialsForCuting = collect();
         $materialsForInsoles = collect();
 
@@ -451,7 +536,6 @@ class AdvancedReports extends Page
             }
         }
 
-        // 3. Группируем
         $groupedCuting = $materialsForCuting->groupBy('material_name')
             ->map(function ($items) {
                 $first = $items->first();

@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('shoe_insoles', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 50)->unique(); // например: 513 Вкладная, 168 обтяжная
+            $table->string('name', 50)->index(); // например: 513 Вкладная, 168 обтяжная
             $table->boolean('is_soft_texon')->default(false); // жёсткий или мягкий тексон
-            $table->boolean('has_egg')->default(false); // нужна ли "яичка"
+            $table->enum('type', ['inset', 'fitting', 'half-insole']); // вкладная, обтяжная, полустелька
+            $table->boolean('has_egg')->default(false); // нужна ли "яичка", , 
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->unique(['name', 'is_soft_texon', 'type'], 'unique_shoe_insole');
         });
     }
 

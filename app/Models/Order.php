@@ -34,4 +34,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderPosition::class);
     }
+
+    public function getFullNameAttribute()
+    {
+        return "№{$this->id} {$this->customer?->name}";
+    }
 }

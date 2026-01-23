@@ -20,12 +20,12 @@ class OrderPositionResource extends Resource
     protected static ?string $model = OrderPosition::class;
 
     // hidden from navigation
-    protected static bool $shouldRegisterNavigation = false;
+    // protected static bool $shouldRegisterNavigation = false;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static string |UnitEnum|null $navigationGroup = 'Производство';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 99;
     protected static ?string $label = 'Позиция заказа';
     protected static ?string $pluralLabel = 'Позиции заказов';
     protected static ?string $navigationLabel = 'Позиции заказов';

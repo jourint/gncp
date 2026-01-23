@@ -17,7 +17,6 @@ class ShoeSoleItemForm
             ->components([
                 Grid::make(2)
                     ->schema([
-                        // Выбор "головы" подошвы (Модель + Цвет)
                         Select::make('shoe_sole_id')
                             ->label('Модель подошвы')
                             ->relationship('shoeSole', 'name')
@@ -26,7 +25,6 @@ class ShoeSoleItemForm
                             ->preload()
                             ->required(),
 
-                        // Выбор размера из Sushi-модели
                         Select::make('size_id')
                             ->label('Размер')
                             ->options(Size::all()->pluck('name', 'id'))
@@ -37,7 +35,7 @@ class ShoeSoleItemForm
                             ->label('Текущий остаток')
                             ->numeric()
                             ->default(0)
-                            ->disabled() // Лучше сделать disabled, если остаток должен меняться только через Movement
+                            ->disabled()
                             ->dehydrated(true),
                     ]),
             ]);

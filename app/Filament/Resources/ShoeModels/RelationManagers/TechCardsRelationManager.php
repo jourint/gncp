@@ -38,11 +38,7 @@ class TechCardsRelationManager extends RelationManager
                     ->label('Цвет модели')
                     ->relationship('color', 'name')
                     ->required()
-                    ->preload(),
-
-                Select::make('material_texture_id')
-                    ->label('Текстура')
-                    ->relationship('texture', 'name')
+                    ->searchable()
                     ->preload(),
 
                 Select::make('shoe_sole_id')
@@ -50,14 +46,21 @@ class TechCardsRelationManager extends RelationManager
                     ->relationship('shoeSole', 'name')
                     ->getOptionLabelFromRecordUsing(fn($record) => "{$record->name} (Цвет: {$record->color?->name})")
                     ->required()
+                    ->searchable()
                     ->preload(),
 
-                Select::make('shoe_insole_id')
-                    ->label('Стелька')
-                    ->relationship('shoeInsole', 'name')
-                    ->getOptionLabelFromRecordUsing(fn($record) => $record->getDisplayNameAttribute())
+                Select::make('material_id')
+                    ->label('Материал основной')
+                    ->relationship('material', 'name')
+                    ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
                     ->required()
-                    ->preload(),
+                    ->searchable(),
+
+                Select::make('material_two_id')
+                    ->label('Доп. материал')
+                    ->relationship('materialTwo', 'name')
+                    ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
+                    ->searchable(),
 
                 FileUpload::make('image_path')
                     ->label('Фото этого исполнения')

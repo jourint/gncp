@@ -10,6 +10,7 @@ class OrderPosition extends Model
     protected $fillable = [
         'order_id',
         'shoe_tech_card_id',
+        'material_lining_id',
         'size_id',
         'quantity',
     ];

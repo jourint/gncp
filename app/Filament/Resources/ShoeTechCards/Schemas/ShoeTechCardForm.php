@@ -21,7 +21,7 @@ class ShoeTechCardForm
             ->components([
                 Section::make('Визуальное исполнение')
                     ->schema([
-                        Grid::make(3)
+                        Grid::make(2)
                             ->schema([
                                 Select::make('shoe_model_id')
                                     ->label('Модель обуви')
@@ -37,12 +37,6 @@ class ShoeTechCardForm
                                     ->required()
                                     ->searchable()
                                     ->preload(),
-
-                                Select::make('material_texture_id')
-                                    ->label('Текстура материала')
-                                    ->relationship('texture', 'name') // используем имя связи из вашей модели
-                                    ->searchable()
-                                    ->preload(),
                             ]),
 
                         // Поле name теперь только для чтения, оно обновится после сохранения
@@ -52,33 +46,6 @@ class ShoeTechCardForm
                             ->disabled()
                             ->dehydrated(false) // не отправляем на сервер, так как модель сама его создаст
                             ->columnSpanFull(),
-                    ]),
-
-                Section::make('Комплектующие')
-                    ->schema([
-                        Grid::make(2)
-                            ->schema([
-                                Select::make('shoe_sole_id')
-                                    ->label('Подошва')
-                                    ->relationship('shoeSole', 'name')
-                                    ->getOptionLabelFromRecordUsing(
-                                        fn($record) =>
-                                        "{$record->name} (Цвет: {$record->color?->name})"
-                                    )
-                                    ->required()
-                                    ->searchable()
-                                    ->preload(),
-
-                                Select::make('shoe_insole_id')
-                                    ->label('Стелька')
-                                    ->relationship('shoeInsole', 'name')
-                                    ->getOptionLabelFromRecordUsing(
-                                        fn($record) => $record->getDisplayNameAttribute()
-                                    )
-                                    ->required()
-                                    ->searchable()
-                                    ->preload(),
-                            ]),
                     ]),
 
                 Section::make('Медиа и Статус')
@@ -96,6 +63,42 @@ class ShoeTechCardForm
                                     ->inline(false),
                             ]),
                     ]),
+
+                // Компоненты комплектующих на всю ширину
+                Grid::make(3)
+                    ->columns(3) // 3 колонки в строке
+                    ->columnSpanFull() // Занимает всю ширину
+                    ->schema([
+                        Select::make('shoe_sole_id')
+                            ->label('Подошва')
+                            ->relationship('shoeSole', 'name')
+                            ->getOptionLabelFromRecordUsing(
+                                fn($record) => $record->fullName
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+
+                        Select::make('material_id')
+                            ->label('Материал основной')
+                            ->relationship('material', 'name')
+                            ->getOptionLabelFromRecordUsing(
+                                fn($record) => $record->fullName
+                            )
+                            ->searchable()
+                            //    ->preload()
+                            ->required(),
+
+                        Select::make('material_two_id')
+                            ->label('Доп. материал')
+                            ->relationship('materialTwo', 'name')
+                            ->getOptionLabelFromRecordUsing(
+                                fn($record) => $record->fullName
+                            )
+                            //    ->preload()
+                            ->searchable(),
+                    ]),
+
             ]);
     }
 }

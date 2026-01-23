@@ -15,7 +15,7 @@ class OrderForm
         return $schema
             ->components([
                 Select::make('customer_id')
-                    ->label('Клиент')
+                    ->label('Заказчик')
                     ->relationship('customer', 'name')
                     ->required()
                     ->searchable()
@@ -35,6 +35,7 @@ class OrderForm
 
                 Textarea::make('comment')
                     ->label('Комментарий')
+                    ->maxLength(255)
                     ->columnSpanFull(),
             ]);
     }

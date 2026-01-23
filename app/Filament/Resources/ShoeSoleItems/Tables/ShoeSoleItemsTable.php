@@ -14,9 +14,8 @@ class ShoeSoleItemsTable
     {
         return $table
             ->columns([
-                TextColumn::make('shoeSole.name')
+                TextColumn::make('shoeSole.fullName')
                     ->label('Подошва')
-                    ->description(fn($record) => "Цвет: " . ($record->shoeSole?->color?->name ?? '-'))
                     ->sortable()
                     ->searchable(),
 
@@ -32,10 +31,12 @@ class ShoeSoleItemsTable
                     ->sortable(),
 
                 TextColumn::make('created_at')
+                    ->label('Дата создания')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Дата обновления')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

@@ -71,8 +71,16 @@ class ShoeModelForm
                             ]),
                     ]),
                 // Блок типов подноски и задника
-                Grid::make(2)
+                Grid::make(3)
                     ->schema([
+                        Select::make('shoe_insole_id')
+                            ->label('Тип стельки')
+                            ->relationship('shoeInsole', 'name')
+                            ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
+                            ->placeholder('Без стельки') // 
+                            ->searchable()
+                            ->preload(),
+
                         Select::make('counter_id')
                             ->label('Тип задника')
                             ->relationship('counter', 'name')

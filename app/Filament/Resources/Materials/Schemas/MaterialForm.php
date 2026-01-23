@@ -6,7 +6,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
-use App\Models\MaterialTexture as Texture;
+use App\Models\MaterialType;
+use App\Models\Unit;
 
 class MaterialForm
 {
@@ -33,25 +34,15 @@ class MaterialForm
                     ->searchable()
                     ->preload(),
 
-                Select::make('texture_id')
-                    ->label('Текстура')
-                    ->relationship('texture', 'name') // Используем имя метода из модели
-                    ->searchable()
-                    ->preload()
-                    ->default(0),
-
                 TextInput::make('stock_quantity')
                     ->label('Остаток на складе')
                     ->disabled()
                     ->numeric()
                     ->default(0.00)
-                    ->step(0.01)
+                    ->step(1)
                     ->suffix(
-                        fn($get) =>
                         // Динамически подтягиваем единицу измерения из типа материала
-                        \App\Models\MaterialType::find($get('material_type_id'))?->unit_id
-                            ? \App\Models\Unit::find(\App\Models\MaterialType::find($get('material_type_id'))->unit_id)?->name
-                            : ''
+                        fn($get) => MaterialType::find($get('material_type_id'))?->unit_id ? Unit::find(MaterialType::find($get('material_type_id'))->unit_id)?->name : ''
                     ),
 
                 Toggle::make('is_active')

@@ -17,9 +17,9 @@ class EditShoeTechCard extends EditRecord
         ];
     }
 
-    protected function getRedirectUrl(): string
+    protected function getRedirectUrlNullable(): string
     {
-        // Если у техкарты есть привязанная модель, возвращаемся в неё
+        // Если у техкарты есть привязанная модель, возвращаемся в неё... ВЫКЛЮЧЕНО!
         if ($this->record->shoe_model_id) {
             return \App\Filament\Resources\ShoeModels\ShoeModelResource::getUrl('edit', [
                 'record' => $this->record->shoe_model_id

@@ -22,7 +22,7 @@ class ShoeTypesTable
 
                 TextColumn::make('price_cutting')
                     ->label('Раскрой')
-                    ->money('UAH') // Автоматически отформатирует как валюту
+                    ->money('UAH')
                     ->sortable(),
 
                 TextColumn::make('price_sewing')
@@ -40,10 +40,12 @@ class ShoeTypesTable
                     ->boolean(),
 
                 TextColumn::make('created_at')
+                    ->label('Дата создания')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Дата обновления')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

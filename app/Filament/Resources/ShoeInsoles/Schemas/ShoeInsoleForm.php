@@ -4,11 +4,12 @@ namespace App\Filament\Resources\ShoeInsoles\Schemas;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Repeater;
+use Filament\Schemas\Components\Grid;
 use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Html;
 use Filament\Schemas\Schema;
-use App\Models\Material;
-use App\Models\Unit;
+use App\Enums\InsolesType;
+use Dom\Text;
 
 class ShoeInsoleForm
 {
@@ -17,68 +18,38 @@ class ShoeInsoleForm
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label('Код резака / Название')
+                    ->label('Код резака')
                     ->required()
                     ->maxLength(50)
-                    ->placeholder('Например: IN-42-Standard'),
+                    ->placeholder('Например: Астра, 513, 168, Люси'),
 
-                Toggle::make('is_black')
-                    ->label('Черная расцветка')
-                    ->onIcon('heroicon-m-moon')
-                    ->offIcon('heroicon-m-sun')
-                    ->default(true)
-                    ->helperText('Если выключено — стелька считается светлой/бежевой'),
+                Select::make('type')
+                    ->label('Тип стельки')
+                    ->options(InsolesType::class)
+                    ->required()
+                    ->native(false),
 
-                Toggle::make('is_active')
-                    ->label('Активна')
-                    ->default(true),
-
-                Repeater::make('tech_card')
-                    ->label('Технологическая карта (Материалы)')
+                Grid::make(3)
+                    ->columns(3)
                     ->schema([
-                        Select::make('material_id')
-                            ->label('Материал')
-                            ->options(
-                                Material::with(['color', 'materialType.unit'])
-                                    ->get()
-                                    ->pluck('full_name', 'id') // ← Используем атрибут full_name
-                            )
-                            ->required()
-                            ->searchable()
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, $set) {
-                                if (blank($state)) {
-                                    $set('material_unit', null);
-                                    return;
-                                }
-                                $material = Material::with('materialType.unit')->find($state);
-                                $unitId = $material?->materialType?->unit_id;
-                                $set('material_unit', $unitId);
-                            })
-                            ->columnSpan(2),
+                        Toggle::make('is_soft_texon')
+                            ->label('Мягкий тексон')
+                            ->default(false)
+                            ->helperText('Да - мягкий, нет - жёсткий'),
 
-                        Select::make('material_unit')
-                            ->label('Ед. изм.')
-                            ->options(Unit::all()->pluck('name', 'id'))
-                            ->disabled()
-                            ->dehydrated()
-                            ->columnSpan(1),
+                        Toggle::make('has_egg')
+                            ->label('Накладка на пятку')
+                            ->default(false)
+                            ->helperText('Нужны ли яичка?'),
 
-                        TextInput::make('count')
-                            ->label('Расход')
-                            ->numeric()
-                            ->required()
-                            ->default(1)
-                            ->columnSpan(1),
-                    ])
-                    ->columns(4)
-                    ->itemLabel(
-                        fn(array $state): ?string =>
-                        Material::find($state['material_id'] ?? null)?->full_name ?? 'Новый компонент'
-                    )
-                    ->collapsible()
-                    ->defaultItems(0)
-                    ->columnSpanFull(),
+                        Toggle::make('is_active')
+                            ->label('Активна')
+                            ->default(true),
+                    ]),
+
+                Html::make('instructions')
+                    ->content('<div class="text-sm text-gray-500 p-2">*Код резака + тип стельки + вид тексона = уникальная еденица стельки. Дисплей: Астра Вкладная (мягкий)</div>')
+                    ->columnSpanFull(), // на всю ширину
             ]);
     }
 }

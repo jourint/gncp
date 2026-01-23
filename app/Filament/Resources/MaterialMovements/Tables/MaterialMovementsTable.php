@@ -26,16 +26,12 @@ class MaterialMovementsTable
                     ->label('Объект склада')
                     ->formatStateUsing(function ($record) {
                         $movable = $record->movable;
-
                         if ($movable instanceof Material) {
-                            return "📦 {$movable->name}" . ($movable->color ? " ({$movable->color->name})" : "");
+                            return "📦 " . $movable->fullName;
                         }
-
                         if ($movable instanceof ShoeSoleItem) {
-                            return "👟 {$movable->shoeSole->name} | Цв: " . ($movable->shoeSole?->color?->name ?? '-') .
-                                " | Р: " . ($movable->size?->name ?? '-');
+                            return "👟 {$movable->shoeSole->fullName} | {$movable->size?->name}";
                         }
-
                         return $movable?->name ?? 'Неизвестный объект';
                     }),
 
@@ -58,7 +54,7 @@ class MaterialMovementsTable
 
                 TextColumn::make('quantity')
                     ->label('Кол-во')
-                    ->numeric(2)
+                    ->numeric()
                     ->alignEnd(),
 
                 TextColumn::make('description')
@@ -68,7 +64,13 @@ class MaterialMovementsTable
                 TextColumn::make('user.name')
                     ->label('Оператор')
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('сreated_at')
+                    ->label('Дата создания')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Дата обновления')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

@@ -18,13 +18,15 @@ return new class extends Migration
             $table->foreignId('color_id')->constrained()->restrictOnDelete();    // Цвет
 
             $table->foreignId('shoe_sole_id')->constrained()->restrictOnDelete();    // Подошва
+            $table->foreignId('material_id')->constrained()->restrictOnDelete();    // Материал основной
+            $table->foreignId('material_two_id')->nullable()->constrained()->restrictOnDelete();    // Материал основной
 
             $table->boolean('is_active')->default(true);    // Активен ли техническая карта
             $table->string('image_path', 255)->nullable();        // Путь к изображению технической карты
 
             $table->timestamps();
 
-            $table->unique(['shoe_model_id', 'color_id'], 'shoe_model_color_unique');
+            $table->unique(['shoe_model_id', 'color_id', 'material_id'], 'shoe_model_color_unique');
         });
     }
 

@@ -26,6 +26,10 @@ class ShoeModelsTable
                     ->badge()
                     ->color('gray'),
 
+                TextColumn::make('shoeInsole.fullName')
+                    ->label('Тип стельки')
+                    ->sortable(),
+
                 // Просто выводим массив ID, так как они равны названиям
                 TextColumn::make('available_sizes')
                     ->label('Размерная сетка')
@@ -44,10 +48,12 @@ class ShoeModelsTable
 
 
                 TextColumn::make('created_at')
+                    ->label('Дата создания')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Дата обновления')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

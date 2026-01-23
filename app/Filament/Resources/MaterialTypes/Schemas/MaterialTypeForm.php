@@ -18,7 +18,7 @@ class MaterialTypeForm
                     ->label('Название категории')
                     ->required()
                     ->unique(ignoreRecord: true)
-                    ->maxLength(255),
+                    ->maxLength(50),
 
                 Select::make('unit_id')
                     ->label('Единица измерения')
@@ -28,6 +28,7 @@ class MaterialTypeForm
 
                 TextInput::make('description')
                     ->label('Описание')
+                    ->columnSpanFull()
                     ->maxLength(255),
 
                 Toggle::make('is_active')

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();    // Заказ
             $table->foreignId('shoe_tech_card_id')->constrained()->restrictOnDelete();    // Техническая карта
-            $table->foreignId('material_lining_id')->constrained()->restrictOnDelete();    // Материал подкладки
+            $table->foreignId('material_lining_id')->nullable()->constrained()->restrictOnDelete();    // Материал подкладки
             $table->unsignedSmallInteger('size_id')->default(36)->index();    // Размер пары Sushi
             $table->unsignedMediumInteger('quantity')->default(1); // количество пар
             $table->timestamps();

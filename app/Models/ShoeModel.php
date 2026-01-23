@@ -84,4 +84,9 @@ class ShoeModel extends Model
 
         return $prices;
     }
+
+    public function getFullNameAttribute()
+    {
+        return "{$this->name} ({$this->shoeType?->name})";
+    }
 }

@@ -15,7 +15,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\IconColumn;
 use App\Models\Color;
-use App\Models\MaterialTexture;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -34,17 +33,11 @@ class MaterialsRelationManager extends RelationManager
                 TextInput::make('name')
                     ->label('Название')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(50),
 
                 Select::make('color_id')
                     ->label('Цвет')
                     ->options(Color::pluck('name', 'id'))
-                    ->searchable()
-                    ->preload(),
-
-                Select::make('texture_id')
-                    ->label('Текстура')
-                    ->options(MaterialTexture::pluck('name', 'id'))
                     ->searchable()
                     ->preload(),
 
@@ -67,11 +60,6 @@ class MaterialsRelationManager extends RelationManager
                 TextColumn::make('color.name')
                     ->label('Цвет'),
 
-                TextColumn::make('texture.name')
-                    ->label('Текстура')
-                    ->state(function ($record) {
-                        return MaterialTexture::find($record->texture_id)?->name ?? '-';
-                    }),
 
                 IconColumn::make('is_active')
                     ->label('Активна')

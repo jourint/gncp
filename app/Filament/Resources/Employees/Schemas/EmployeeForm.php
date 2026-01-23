@@ -39,8 +39,8 @@ class EmployeeForm
                     ->label('Коэффициент навыков')
                     ->numeric()
                     ->step(0.01)
-                    ->minValue(0.1)
-                    ->maxValue(2.0)
+                    ->minValue(0.01)
+                    ->maxValue(1.99)
                     ->default(1.00)
                     ->helperText('Используется для распределения пар из заказа'),
 

@@ -22,7 +22,6 @@ class ReplicateMaterialToNextColorAction extends Action
                 // 1. Находим все цвета, которые уже используются для данного материала с таким же типом
                 $existingColorIds = Material::where('name', $record->name)
                     ->where('material_type_id', $record->material_type_id)
-                    ->where('texture_id', $record->texture_id)
                     ->pluck('color_id')
                     ->toArray();
 

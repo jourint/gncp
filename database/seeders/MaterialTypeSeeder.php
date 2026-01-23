@@ -20,8 +20,8 @@ class MaterialTypeSeeder extends Seeder
             ['name' => 'Кожа Одежка', 'unit' => 3, 'description' => 'Кожа козы, мягкая'],
             ['name' => 'Кожзаменитель', 'unit' => 3, 'description' => 'Дермонтин'],
             ['name' => 'Межподкладка', 'unit' => 3, 'description' => 'Уплотнитель для кожи'],
-            ['name' => 'Тексон', 'unit' => 3, 'description' => 'Материал для стелек'],
-            ['name' => 'Гранитоль', 'unit' => 3, 'description' => 'Материал для задникив, подносков'],
+            //    ['name' => 'Тексон', 'unit' => 3, 'description' => 'Материал для стелек'],
+            //    ['name' => 'Гранитоль', 'unit' => 3, 'description' => 'Материал для задникив, подносков'],
             ['name' => 'Поролон', 'unit' => 3, 'description' => ''],
             ['name' => 'Шнурки', 'unit' => 2, 'description' => ''],
             ['name' => 'Липучки', 'unit' => 1, 'description' => 'Мягкая и жесткая липучка'],
@@ -38,8 +38,6 @@ class MaterialTypeSeeder extends Seeder
                 [
                     'unit_id' => $type['unit'],
                     'description' => $type['description'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
                 ]
             );
         }

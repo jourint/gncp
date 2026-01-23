@@ -13,6 +13,8 @@ class ShoeTechCard extends Model
         'shoe_model_id',
         'color_id',
         'shoe_sole_id',
+        'material_id',
+        'material_two_id',
         'is_active',
         'image_path',
     ];
@@ -35,26 +37,15 @@ class ShoeTechCard extends Model
 
     public function getFullNameAttribute()
     {
-        // Результат: Эстер (Ботинки) / Красный (+подкладка из заказа)
-        $baseName = $this->name;
-        $shoeTypeName = $this->shoeModel?->shoeType?->name ?? 'Unknown Type';
-        $colorName = $this->color?->name ?? 'Unknown Color';
-        return "{$baseName} ({$shoeTypeName}) / {$colorName}";
+        // Результат: Эстер (Ботинки) / Кожа (Красный) (+подкладка из заказа)
+        $baseName = $this->shoeModel?->fullName ?? 'Unknown Model';
+        $materialName = $this->material?->fullName ?? 'Unknown Material';
+        return "{$baseName} / {$materialName}";
     }
 
     public function shoeModel(): BelongsTo
     {
         return $this->belongsTo(ShoeModel::class);
-    }
-
-    public function material(): BelongsTo
-    {
-        return $this->belongsTo(Material::class);
-    }
-
-    public function materials(): HasMany
-    {
-        return $this->hasMany(TechCardMaterial::class);
     }
 
     public function color(): BelongsTo
@@ -65,6 +56,16 @@ class ShoeTechCard extends Model
     public function shoeSole(): BelongsTo
     {
         return $this->belongsTo(ShoeSole::class);
+    }
+
+    public function material(): BelongsTo
+    {
+        return $this->belongsTo(Material::class, 'material_id');
+    }
+
+    public function materialTwo(): BelongsTo
+    {
+        return $this->belongsTo(Material::class, 'material_two_id');
     }
 
     public function techCardMaterials(): HasMany

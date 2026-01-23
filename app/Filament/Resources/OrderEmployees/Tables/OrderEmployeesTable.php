@@ -16,17 +16,20 @@ class OrderEmployeesTable
     {
         return $table
             ->columns([
-                TextColumn::make('employee.name')
+                TextColumn::make('employee.fullName')
                     ->label('Сотрудник')
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('order_id')
                     ->label('Заказ')
-                    ->formatStateUsing(fn($record) => "№{$record->order_id} ({$record->order?->customer?->name})"),
+                    ->formatStateUsing(fn($record) => "{$record->order?->fullName} {$record->order->started_at->format('d.m.Y')}"),
 
                 TextColumn::make('quantity')
                     ->label('Пар')
+                    ->badge()
+                    ->color('info')
+                    ->sortable()
                     ->alignCenter(),
 
                 TextColumn::make('price_per_pair')
@@ -47,10 +50,12 @@ class OrderEmployeesTable
 
 
                 TextColumn::make('created_at')
+                    ->label('Дата создания')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Дата обновления')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

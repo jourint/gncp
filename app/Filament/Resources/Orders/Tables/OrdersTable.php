@@ -15,7 +15,7 @@ class OrdersTable
     {
         return $table
             ->columns([
-                TextColumn::make('customer.name')
+                TextColumn::make('fullName')
                     ->label('Клиент')
                     ->searchable()
                     ->sortable(),
@@ -35,12 +35,17 @@ class OrdersTable
                         OrderStatus::Cancelled => 'danger',
                     }),
 
+                TextColumn::make('comment')
+                    ->label('Комментарий')
+                    ->limit(50),
 
                 TextColumn::make('created_at')
+                    ->label('Дата создания')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Дата обновления')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

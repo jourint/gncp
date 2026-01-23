@@ -9,6 +9,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Table;
+use App\Models\Unit;
 
 class MaterialsTable
 {
@@ -31,10 +32,6 @@ class MaterialsTable
                     ->label('Цвет')
                     ->placeholder('N/A'),
 
-                TextColumn::make('texture.name') // Обращаемся через связь
-                    ->label('Текстура')
-                    ->placeholder('-'),
-
                 TextColumn::make('stock_quantity')
                     ->label('Склад')
                     ->numeric(2)
@@ -42,17 +39,20 @@ class MaterialsTable
                     ->color(fn($state) => $state <= 0 ? 'danger' : 'success')
                     ->description(
                         fn($record) =>
-                        \App\Models\Unit::find($record->materialType?->unit_id)?->name ?? ''
+                        Unit::find($record->materialType?->unit_id)?->name ?? ''
                     ),
 
                 IconColumn::make('is_active')
                     ->label('Статус')
                     ->boolean(),
+
                 TextColumn::make('created_at')
+                    ->label('Дата создания')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Дата обновления')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

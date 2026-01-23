@@ -137,8 +137,27 @@
         </x-filament::section>
     </div>
 
-    {{-- 3. Сводная таблица загрузки всего цеха --}}
+    {{-- 3. Секция Магического деления --}}
+    <div class="flex justify-center">
+        <x-filament::button 
+            wire:click="autoDistribute" 
+            color="warning" 
+            size="xl"
+            icon="heroicon-m-sparkles"
+            class="w-full max-w-md shadow-xl"
+            wire:confirm="Это действие автоматически распределит все ОСТАВШИЕСЯ пары поровну между всеми активными сотрудниками цеха. Продолжить?"
+        >
+            РАСПРЕДЕЛИТЬ ОСТАТКИ АВТОМАТИЧЕСКИ
+        </x-filament::button>
+    </div>
+
+    {{-- 4. Сводная таблица загрузки всего цеха --}}
     <x-filament::section title="Общая картина по цеху" icon="heroicon-m-chart-bar" class="mt-8">
+        <x-slot name="heading">
+            <div class="flex items-center gap-2">
+                    <span>Распределенные пары по сотруднникам цеха</span>
+            </div>
+        </x-slot>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead>
@@ -174,18 +193,6 @@
         </div>
     </x-filament::section>
 
-    {{-- 4. Секция Магического деления --}}
-    <div class="mt-6 flex justify-center">
-        <x-filament::button 
-            wire:click="autoDistribute" 
-            color="warning" 
-            size="xl"
-            icon="heroicon-m-sparkles"
-            class="w-full max-w-md shadow-xl"
-            wire:confirm="Это действие автоматически распределит все ОСТАВШИЕСЯ пары поровну между всеми активными сотрудниками цеха. Продолжить?"
-        >
-            РАСПРЕДЕЛИТЬ ОСТАТКИ АВТОМАТИЧЕСКИ
-        </x-filament::button>
-    </div>
+
 
 </x-filament-panels::page>

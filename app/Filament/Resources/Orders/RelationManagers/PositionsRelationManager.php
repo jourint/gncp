@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Orders\RelationManagers;
 
+use App\Models\Color;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -11,6 +12,7 @@ use Filament\Actions\DissociateAction;
 use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\ColorColumn;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -18,6 +20,7 @@ use App\Models\Size;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Table;
 use App\Models\ShoeTechCard;
+use App\Filament\Actions\ReplicateOrderPositionAction;
 
 class PositionsRelationManager extends RelationManager
 {
@@ -36,6 +39,16 @@ class PositionsRelationManager extends RelationManager
                     ->preload()
                     ->live()
                     ->columnSpan(2),
+
+                Select::make('material_lining_id')
+                    ->label('Подкладка')
+                    ->relationship('materialLining', 'name')
+                    ->getOptionLabelFromRecordUsing(
+                        fn($record) => $record->fullName
+                    )
+                    ->searchable()
+                    ->preload()
+                    ->required(),
 
                 Select::make('size_id')
                     ->label('Размер')
@@ -70,9 +83,15 @@ class PositionsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('shoe_tech_card_id')
             ->columns([
+                ColorColumn::make('shoeTechCard.color.hex')
+                    ->label('Цвет'),
+
                 TextColumn::make('shoeTechCard.name')
-                    ->label('Спецификация')
-                    ->description(fn($record) => "Модель: " . ($record->shoeTechCard?->shoeModel?->name ?? 'н/д')),
+                    ->label('Спецификация'),
+
+                TextColumn::make('materialLining.name')
+                    ->label('Подкладка')
+                    ->formatStateUsing(fn($record) => $record->materialLining?->fullName ?? 'н/д'),
 
                 TextColumn::make('size_id')
                     ->label('Размер')
@@ -91,16 +110,17 @@ class PositionsRelationManager extends RelationManager
             ->headerActions([
                 CreateAction::make()
                     ->label('Добавить позицию заказа'),
-                AssociateAction::make(),
+                //    AssociateAction::make(),
             ])
             ->recordActions([
+                ReplicateOrderPositionAction::make(),
                 EditAction::make(),
-                DissociateAction::make(),
+                //    DissociateAction::make(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DissociateBulkAction::make(),
+                    //    DissociateBulkAction::make(),
                     DeleteBulkAction::make(),
                 ]),
             ]);

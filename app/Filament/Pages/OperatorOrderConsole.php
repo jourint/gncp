@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\ShoeModel;
 use App\Models\ShoeTechCard;
 use App\Models\Size;
+use App\Models\MaterialLining;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
@@ -18,29 +19,27 @@ use App\Enums\OrderStatus;
 
 class OperatorOrderConsole extends Page
 {
-    // Твой эталонный код инициализации страницы
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedComputerDesktop;
     protected string $view = 'filament.pages.operator-order-console';
-    protected static ?string $title = 'АРМ - Создание заказа';
+    protected static ?string $title = 'АРМ - Оператор заказов';
     protected static ?int $navigationSort = 1;
 
-    // Свойства компонента
     public ?int $customer_id = null;
     public ?string $delivery_date = null;
     public ?int $selected_model_id = null;
     public array $rows = [];
     public array $sizeNames = [];
+    public array $liningNames = [];
 
     public function mount(): void
     {
         $this->delivery_date = now()->addDays()->format('Y-m-d');
-        // Загружаем имена размеров один раз, чтобы не дергать базу в цикле Blade
         $this->sizeNames = Size::pluck('name', 'id')->toArray();
+        $this->liningNames = MaterialLining::with('color')->get()->mapWithKeys(function ($lining) {
+            return [$lining->id => $lining->fullName];
+        })->toArray();
     }
 
-    /**
-     * Вычисляемое свойство для списка техкарт
-     */
     public function getAvailableTechCardsProperty(): Collection
     {
         if (!$this->selected_model_id) return collect();
@@ -51,38 +50,65 @@ class OperatorOrderConsole extends Page
             ->get();
     }
 
-    /**
-     * Добавление строки техкарты
-     */
+    public function getAvailableLiningsProperty(): Collection
+    {
+        return MaterialLining::with('color')->orderBy('name')->get();
+    }
+
     public function addTechCardToOrder(int $techCardId): void
     {
-        if (collect($this->rows)->contains('tech_card_id', $techCardId)) {
-            Notification::make()->title('Уже в списке')->warning()->send();
-            return;
-        }
-
         $techCard = ShoeTechCard::with('shoeModel')->find($techCardId);
+
         if (!$techCard || !$techCard->shoeModel) return;
 
-        // Предполагаем, что доступные размеры — это массив ID
         $availableSizeIds = $techCard->shoeModel->available_sizes ?? [];
-
         $grid = [];
         foreach ($availableSizeIds as $sizeId) {
             $grid[$sizeId] = 0;
         }
 
+        $key = $techCardId . '_null';
+
         $this->rows[] = [
+            'key' => $key,
             'tech_card_id' => $techCard->id,
+            'lining_id' => null,
             'tech_card_name' => $techCard->name,
+            'lining_name' => null,
             'shoe_model_id' => $techCard->shoe_model_id,
             'grid' => $grid,
         ];
     }
 
-    /**
-     * Хук для фикса пробелов и букв в полях ввода
-     */
+    public function updateLiningForRow(int $index, $liningId): void
+    {
+        if ($liningId === '' || $liningId === null || $liningId === 0) {
+            // Не обновляем, если пусто
+            return;
+        }
+
+        $liningId = (int)$liningId;
+
+        $lining = MaterialLining::find($liningId);
+        if (!$lining) return;
+
+        $techCardId = $this->rows[$index]['tech_card_id'];
+        $newKey = $techCardId . '_' . $liningId;
+
+        // Проверяем на дубль
+        if (collect($this->rows)->contains('key', $newKey)) {
+            Notification::make()->title('Уже в списке')->warning()->send();
+            // Возвращаем предыдущее значение
+            $prevLiningId = $this->rows[$index]['lining_id'];
+            $this->rows[$index]['key'] = $techCardId . '_' . ($prevLiningId ?? 'null');
+            return;
+        }
+
+        $this->rows[$index]['key'] = $newKey;
+        $this->rows[$index]['lining_id'] = $liningId;
+        $this->rows[$index]['lining_name'] = $lining->fullName;
+    }
+
     public function updatedRows($value, $name): void
     {
         if (str_contains($name, '.grid.')) {
@@ -92,16 +118,12 @@ class OperatorOrderConsole extends Page
 
             $val = $this->rows[$rowIdx]['grid'][$sizeId];
 
-            // Принудительно чистим данные, чтобы array_sum в Blade не падал
             $this->rows[$rowIdx]['grid'][$sizeId] = (is_numeric($val) && (int)$val >= 0)
                 ? (int)$val
                 : 0;
         }
     }
 
-    /**
-     * Копирование в следующую ТК
-     */
     public function nextTechCard(int $index): void
     {
         $currentRow = $this->rows[$index];
@@ -113,12 +135,23 @@ class OperatorOrderConsole extends Page
             ->first();
 
         if ($nextTc) {
-            $this->addTechCardToOrder($nextTc->id);
-            $lastIdx = count($this->rows) - 1;
-            // Если техкарта успешно добавлена (не дубль), копируем сетку
-            if ($this->rows[$lastIdx]['tech_card_id'] === $nextTc->id) {
-                $this->rows[$lastIdx]['grid'] = $currentRow['grid'];
+            $liningId = $currentRow['lining_id'];
+            $newKey = $nextTc->id . '_' . ($liningId ?? 'null');
+
+            if (collect($this->rows)->contains('key', $newKey)) {
+                Notification::make()->title('Уже в списке')->warning()->send();
+                return;
             }
+
+            $this->rows[] = [
+                'key' => $newKey,
+                'tech_card_id' => $nextTc->id,
+                'lining_id' => $liningId,
+                'tech_card_name' => $nextTc->name,
+                'lining_name' => $currentRow['lining_name'],
+                'shoe_model_id' => $nextTc->shoe_model_id,
+                'grid' => $currentRow['grid'],
+            ];
         } else {
             Notification::make()->title('Это последняя техкарта')->info()->send();
         }
@@ -132,15 +165,15 @@ class OperatorOrderConsole extends Page
 
     public function saveOrder(): void
     {
-        // 1. Валидация
         if (!$this->customer_id) {
             Notification::make()->title('Ошибка')->body('Выберите заказчика')->danger()->send();
             return;
         }
 
-        // Оставляем только строки, где общая сумма пар > 0
         $rowsToSave = collect($this->rows)->filter(function ($row) {
             return collect($row['grid'])->sum() > 0;
+        })->filter(function ($row) {
+            return $row['lining_id'] !== null && $row['lining_id'] !== 0; // ✅ Проверяем на 0 тоже
         });
 
         if ($rowsToSave->isEmpty()) {
@@ -150,22 +183,20 @@ class OperatorOrderConsole extends Page
 
         try {
             DB::transaction(function () use ($rowsToSave) {
-                // 2. Создаем основной заказ (таблица orders)
-                // Используем твой статус по умолчанию или OrderStatus::Pending->value
                 $order = Order::create([
                     'customer_id' => $this->customer_id,
                     'started_at'  => $this->delivery_date ?? now()->addDay(),
-                    'status'      => OrderStatus::Pending->value, // Или просто 'pending'
-                    'comment'     => null, // Можно добавить свойство $comment в класс и привязать к textarea
+                    'status'      => OrderStatus::Pending->value,
+                    'comment'     => null,
                 ]);
 
-                // 3. Заполняем позиции (таблица order_positions)
                 foreach ($rowsToSave as $row) {
                     foreach ($row['grid'] as $sizeId => $quantity) {
                         if ($quantity > 0) {
                             OrderPosition::create([
                                 'order_id'           => $order->id,
                                 'shoe_tech_card_id'  => $row['tech_card_id'],
+                                'material_lining_id' => $row['lining_id'], // ✅ Теперь всегда число
                                 'size_id'            => $sizeId,
                                 'quantity'           => (int)$quantity,
                             ]);
@@ -174,13 +205,11 @@ class OperatorOrderConsole extends Page
                 }
             });
 
-            // 4. Успех и очистка
             Notification::make()
-                ->title('Заказ №' . DB::getPdo()->lastInsertId() . ' создан')
+                ->title('Заказ создан')
                 ->success()
                 ->send();
 
-            // Сброс формы для нового ввода
             $this->reset(['rows', 'selected_model_id', 'customer_id']);
             $this->delivery_date = now()->addDay()->format('Y-m-d');
         } catch (\Exception $e) {

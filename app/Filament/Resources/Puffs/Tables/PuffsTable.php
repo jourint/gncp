@@ -17,6 +17,10 @@ class PuffsTable
                 TextColumn::make('name')
                     ->label('Название')
                     ->searchable(),
+
+                TextColumn::make('description')
+                    ->label('Описание')
+                    ->limit(50),
             ])
             ->filters([
                 //

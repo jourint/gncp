@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     <div class="flex flex-col gap-6">
-        
+
         {{-- Заголовок: Клиент и Дата --}}
         <x-filament::section>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -41,7 +41,7 @@
             <x-filament::section title="Выбор техкарты (цвета)" compact>
                 <div class="flex flex-wrap gap-2">
                     @forelse($this->availableTechCards as $tc)
-                        <button wire:click="addTechCardToOrder({{ $tc->id }})" 
+                        <button wire:click="addTechCardToOrder({{ $tc->id }})"
                                 class="px-3 py-1.5 text-xs font-bold rounded-lg bg-primary-600 text-white hover:bg-primary-500 shadow-sm transition">
                             + {{ $tc->name }}
                         </button>
@@ -58,31 +58,42 @@
                 <table class="w-full text-left">
                     <thead class="bg-gray-50 border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
                         <tr>
-                            <th class="p-4 text-xs font-black uppercase text-gray-500 w-1/4 whitespace-nowrap">Модель / Техкарта</th>
+                            <th class="p-4 text-xs font-black uppercase text-gray-500 w-1/4 whitespace-nowrap">Модель / Техкарта / Подкладка</th>
                             <th class="p-4 text-xs font-black uppercase text-gray-500 text-center">Размерная сетка (заполните нули)</th>
                             <th class="p-4 text-center text-xs font-black uppercase text-gray-500 w-24 whitespace-nowrap">Итого</th>
-                            <th class="p-4 w-12 text-right">
-                                {{-- Кнопка копирования след. техкарты может быть тут или в строке --}}
-                            </th>
+                            <th class="p-4 w-12 text-right"></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-white/5 uppercase">
                         @foreach($rows as $idx => $row)
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
+                                {{-- В строке таблицы --}}
                                 <td class="p-4 align-top">
                                     <div class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
                                         {{ $row['tech_card_name'] }}
                                     </div>
+                                    <div class="mt-1">
+                                        <x-filament::input.select 
+                                            wire:model.live="rows.{{ $idx }}.lining_id"
+                                            x-data
+                                            @change="$wire.updateLiningForRow({{ $idx }}, parseInt($event.target.value) || null)"
+                                            class="block w-full rounded-lg text-sm bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 focus:ring-primary-500 focus:border-primary-500">
+                                            <option value="">Выберите подкладку...</option>
+                                            @foreach($this->availableLinings as $lining)
+                                                <option value="{{ $lining->id }}">{{ $lining->fullName }}</option>
+                                            @endforeach
+                                        </x-filament::input.select>
+                                    </div>
                                 </td>
+
                                 <td class="p-4">
-                                    {{-- Сетка размеров: flex-row без переноса (nowrap) --}}
                                     <div class="flex flex-row flex-nowrap gap-1 overflow-x-auto pb-2 scrollbar-hide">
                                         @foreach($row['grid'] as $sizeId => $qty)
                                             <div class="flex flex-col flex-shrink-0 w-12 border border-gray-200 rounded-lg bg-gray-50 dark:border-white/10 dark:bg-gray-800 focus-within:ring-2 focus-within:ring-primary-500">
                                                 <div class="bg-gray-200/50 py-1 text-[9px] font-black text-center border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
-                                                    {{ \App\Models\Size::find($sizeId)->name }}
+                                                    {{ $sizeNames[$sizeId] ?? $sizeId }}
                                                 </div>
-                                                <input type="number" 
+                                                <input type="number"
                                                        wire:model.live="rows.{{ $idx }}.grid.{{ $sizeId }}"
                                                        onfocus="this.select()"
                                                        min="0"
@@ -98,7 +109,6 @@
                                 </td>
                                 <td class="p-4 text-right whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-2">
-                                        {{-- Твоя плюшка: Кнопка копирования --}}
                                         <button wire:click="nextTechCard({{ $idx }})" title="Копировать в следующую ТК" class="text-gray-400 hover:text-primary-500">
                                             <x-heroicon-m-document-duplicate class="w-5 h-5"/>
                                         </button>
@@ -110,7 +120,6 @@
                             </tr>
                         @endforeach
                     </tbody>
-                    {{-- Секция итогов --}}
                     <tfoot class="bg-gray-50/50 dark:bg-white/5">
                         <tr>
                             <td colspan="2" class="p-4 text-right text-sm font-bold text-gray-500 uppercase">

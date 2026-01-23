@@ -25,8 +25,7 @@ class MaterialMovementForm
                             ->titleAttribute('name') // Обязательный атрибут для поиска
                             ->label('Материал')
                             ->getOptionLabelFromRecordUsing(
-                                fn(Material $record) =>
-                                "{$record->name}" . ($record->color ? " — {$record->color->name}" : "")
+                                fn(Material $record) => $record->fullName
                             ),
 
                         // Подошвы
@@ -34,9 +33,7 @@ class MaterialMovementForm
                             ->titleAttribute('name') // Обязательный атрибут для поиска
                             ->label('Подошва')
                             ->getOptionLabelFromRecordUsing(
-                                fn(ShoeSoleItem $record) =>
-                                "{$record->shoeSole->name} | Цвет: " . ($record->shoeSole?->color?->name ?? '-') .
-                                    " | Разм: " . ($record->size?->name ?? '-')
+                                fn(ShoeSoleItem $record) => "{$record->shoeSole?->fullName} [{$record->size?->name}]"
                             ),
                     ])
                     ->required()

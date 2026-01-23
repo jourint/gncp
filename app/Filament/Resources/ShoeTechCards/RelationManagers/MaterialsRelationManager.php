@@ -20,7 +20,7 @@ use App\Models\Material;
 
 class MaterialsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'materials';
+    protected static string $relationship = 'techCardMaterials';
     protected static ?string $title = 'Состав (Материалы)';
 
     public function form(Schema $schema): Schema
@@ -41,8 +41,9 @@ class MaterialsRelationManager extends RelationManager
                     ->searchable(['name']) // Можно добавить и 'color.name' в массив, если версия Filament позволяет
                     ->preload()
                     ->required()
-                    ->live()
-                    ->afterStateUpdated(fn($set) => $set('quantity', null)),
+                    //    ->afterStateUpdated(fn($set) => $set('quantity', null))
+                    ->live(),
+
 
                 TextInput::make('quantity')
                     ->label('Расход на 1 пару')

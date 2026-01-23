@@ -23,7 +23,7 @@ class ShoeSole extends Model
         ];
     }
 
-    public function items(): HasMany
+    public function shoeSoleItems(): HasMany
     {
         return $this->hasMany(ShoeSoleItem::class);
     }
@@ -31,5 +31,11 @@ class ShoeSole extends Model
     public function color(): BelongsTo
     {
         return $this->belongsTo(Color::class);
+    }
+
+    public function getFullNameAttribute()
+    {
+        $colorName = $this->color?->name;
+        return "{$this->name} ({$colorName})";
     }
 }

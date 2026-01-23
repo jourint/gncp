@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('description', 255)->nullable();    // Описание модели
             $table->foreignId('shoe_type_id')->constrained('shoe_types')->restrictOnDelete();    // Тип обуви
 
-            $table->foreignId('shoe_insole_id')->constrained()->restrictOnDelete();    // Стелька
+            $table->foreignId('shoe_insole_id')->nullable()->constrained()->restrictOnDelete();    // Стелька
             $table->foreignId('puff_id')->nullable()->constrained('puffs')->restrictOnDelete();    // Подносок
             $table->foreignId('counter_id')->nullable()->constrained('counters')->restrictOnDelete(); // Задник
 

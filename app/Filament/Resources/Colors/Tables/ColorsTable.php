@@ -19,8 +19,10 @@ class ColorsTable
                     ->label('Название цвета')
                     ->sortable()
                     ->searchable(),
+
                 ColorColumn::make('hex')
                     ->label('Цвет'),
+
                 TextColumn::make('hex_code')
                     ->label('HEX код')
                     ->getStateUsing(fn($record) => $record->hex) // Указываем брать данные из поля hex

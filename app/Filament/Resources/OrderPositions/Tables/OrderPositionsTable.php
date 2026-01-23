@@ -16,10 +16,9 @@ class OrderPositionsTable
     {
         return $table
             ->columns([
-                TextColumn::make('order.id')
+                TextColumn::make('order.fullName')
                     ->label('Заказ №')
-                    ->sortable()
-                    ->description(fn($record) => $record->order?->customer?->name),
+                    ->sortable(),
 
                 TextColumn::make('shoeTechCard.name')
                     ->label('Техкарта / Модель')

@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Material extends Model
 {
@@ -39,6 +41,23 @@ class Material extends Model
     public function movements(): MorphMany
     {
         return $this->morphMany(MaterialMovement::class, 'movable');
+    }
+
+    public function primaryShoeTechCards(): HasMany
+    {
+        return $this->hasMany(ShoeTechCard::class, 'material_id');
+    }
+
+    public function secondaryShoeTechCards(): HasMany
+    {
+        return $this->hasMany(ShoeTechCard::class, 'material_two_id');
+    }
+
+    // Получить обе связи
+    public function getAllUsedInTechCardsAttribute(): Collection
+    {
+        return $this->primaryShoeTechCards
+            ->concat($this->secondaryShoeTechCards);
     }
 
     public function addStock(float $amount): void

@@ -53,9 +53,9 @@ class ReplicateTechCardAction extends Action
 
                         $duplicatedCard->save();
 
-                        // Копируем материалы (проверь, что связь в модели называется materials)
-                        if (method_exists($record, 'materials')) {
-                            foreach ($record->materials as $material) {
+                        // Копируем материалы (проверь, что связь в модели называется techCardMaterials)
+                        if (method_exists($record, 'techCardMaterials')) {
+                            foreach ($record->techCardMaterials as $material) {
                                 $newMaterial = $material->replicate();
                                 $newMaterial->shoe_tech_card_id = $duplicatedCard->id;
                                 $newMaterial->save();

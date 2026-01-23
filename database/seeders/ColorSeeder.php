@@ -33,6 +33,7 @@ class ColorSeeder extends Seeder
             ['name' => 'Зеленый', 'hex' => '#008000'],
             ['name' => 'Фиолетовый', 'hex' => '#800080'],
             ['name' => 'Хаки', 'hex' => '#F0E68C'],
+            ['name' => 'Cерый', 'hex' => '#b1aaac'],
         ];
 
         foreach ($colors as $color) {

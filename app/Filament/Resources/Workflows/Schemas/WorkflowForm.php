@@ -23,11 +23,11 @@ class WorkflowForm
                     ->label('Стоимость процесса')
                     ->numeric()
                     ->prefix('₴')
-                    ->default(0.00),
+                    ->default(1.00),
 
                 Textarea::make('description')
                     ->label('Описание')
-                    ->maxLength(65535)
+                    ->maxLength(255)
                     ->columnSpanFull(), // Растягиваем на всю ширину
 
                 Toggle::make('is_active')

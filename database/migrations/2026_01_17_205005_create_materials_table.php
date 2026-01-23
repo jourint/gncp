@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('materials', function (Blueprint $table) {
             $table->id();
             $table->string('name')->index(); // наименование материала
-            $table->foreignId('material_type_id')->nullable()->constrained('material_types')->restrictOnDelete();   // Тип материала
+            $table->foreignId('material_type_id')->constrained('material_types')->restrictOnDelete();   // Тип материала
             $table->foreignId('color_id')->nullable()->constrained('colors')->restrictOnDelete();               // Цвет материала
             $table->boolean('is_active')->default(true);    // Активен ли материал
             $table->decimal('stock_quantity', 12, 2)->default(0.00); // материал в наличии на складе

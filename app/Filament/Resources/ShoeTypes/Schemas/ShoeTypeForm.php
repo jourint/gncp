@@ -18,7 +18,6 @@ class ShoeTypeForm
                     ->maxLength(50)
                     ->placeholder('Например: Туфли'),
 
-                // Группа цен (в БД это decimal/float поля)
                 TextInput::make('price_cutting')
                     ->label('Цена за раскрой')
                     ->numeric()

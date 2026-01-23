@@ -16,14 +16,24 @@ class OrderPositionForm
             ->components([
                 Select::make('order_id')
                     ->label('Заказ')
-                    ->relationship('order', 'id')
-                    ->getOptionLabelFromRecordUsing(fn(Order $record) => "Заказ №{$record->id} ({$record->customer?->name})")
-                    ->searchable()
+                    ->relationship('order', 'id', modifyQueryUsing: fn($query) => $query->orderBy('started_at', 'desc'))
+                    ->getOptionLabelFromRecordUsing(fn(Order $record) => "{$record->fullName} ({$record->started_at->format('d.m.Y')})")
+                    ->preload()
                     ->required(),
 
                 Select::make('shoe_tech_card_id')
                     ->label('Техкарта')
                     ->relationship('shoeTechCard', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+
+                Select::make('material_lining_id')
+                    ->label('Подкладка')
+                    ->relationship('materialLining', 'name')
+                    ->getOptionLabelFromRecordUsing(
+                        fn($record) => $record->fullName
+                    )
                     ->searchable()
                     ->preload()
                     ->required(),

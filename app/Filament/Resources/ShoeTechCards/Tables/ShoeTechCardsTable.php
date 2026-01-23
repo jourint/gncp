@@ -21,22 +21,18 @@ class ShoeTechCardsTable
                 ImageColumn::make('image_path')
                     ->label('Фото')
                     ->square()
-                    ->size(50),
+                    ->width(50),
 
                 TextColumn::make('name')
-                    ->label('Спецификация')
+                    ->label('Название тех-карты')
+                    ->description(fn($record) => "Цвет: " . ($record->color?->name ?? 'н/д'))
                     ->searchable()
                     ->sortable(),
-                //    ->description(fn($record) => "Модель: " . ($record->shoeModel?->shoeType?->name ?? 'н/д')),
 
                 TextColumn::make('shoeSole.name')
                     ->label('Подошва')
                     ->description(fn($record) => "Цвет: " . ($record->shoeSole?->color?->name ?? 'н/д'))
                     ->sortable(),
-
-                TextColumn::make('shoeInsole.displayName')
-                    ->label('Стелька')
-                    ->toggleable(isToggledHiddenByDefault: true),
 
                 IconColumn::make('is_active')
                     ->label('Статус')
@@ -44,10 +40,12 @@ class ShoeTechCardsTable
                     ->alignCenter(),
 
                 TextColumn::make('created_at')
+                    ->label('Дата создания')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Дата обновления')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

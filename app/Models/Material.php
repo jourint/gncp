@@ -35,7 +35,7 @@ class Material extends Model
 
     public function color(): BelongsTo
     {
-        return $this->belongsTo(Color::class)->withDefault(['name' => 'Цвет не назначен']);
+        return $this->belongsTo(Color::class); //->withDefault(['name' => 'Цвет не назначен']);
     }
 
     public function movements(): MorphMany

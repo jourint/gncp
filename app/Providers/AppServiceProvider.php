@@ -32,8 +32,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Relations
         Relation::enforceMorphMap([
-            'material' => 'App\Models\Material',
-            'sole'     => 'App\Models\ShoeSoleItem',
+            'material'       => \App\Models\Material::class,
+            'sole'           => \App\Models\ShoeSoleItem::class,
+            'order_employee' => \App\Models\OrderEmployee::class,
         ]);
     }
 

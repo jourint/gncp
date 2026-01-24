@@ -18,6 +18,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\Support\Facades\Blade;
 
 class CpPanelProvider extends PanelProvider
 {
@@ -41,6 +42,10 @@ class CpPanelProvider extends PanelProvider
                 //    AccountWidget::class,
                 //    FilamentInfoWidget::class,
             ])
+            ->renderHook(
+                'panels::body.end',
+                fn(): string => Blade::render('<x-global-print-setup />'),
+            )
             ->viteTheme('resources/css/app.css')
             ->middleware([
                 EncryptCookies::class,

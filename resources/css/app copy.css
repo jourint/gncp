@@ -1,0 +1,70 @@
+@import 'tailwindcss';
+
+@source '../views';
+/* Добавляем эти две строки, чтобы оживить админку */
+/* Импорт базовой темы Filament, чтобы кнопки и панели вернулись */
+@import "../../vendor/filament/filament/resources/css/theme.css";
+
+/* Указываем Tailwind, где искать твои классы */
+@source "../../resources/views/**/*.blade.php";
+@source "../../app/Filament/**/*.php";
+@source "../../vendor/filament/**/*.blade.php";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+
+@media print {
+    /* 1. Прячем вообще всё */
+    body * {
+        visibility: hidden !important;
+    }
+
+    /* 2. Показываем только наш контейнер и его содержимое */
+    #report-content-area, 
+    #report-content-area * {
+        visibility: visible !important;
+    }
+
+    /* 3. Вырываем отчет из общего потока и кладем его в начало страницы */
+    #report-content-area {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    /* 4. Сброс настроек страницы */
+    @page {
+        size: portrait;
+        margin: 15mm 10mm;
+    }
+
+    /* 5. Гарантируем отсутствие Debugbar и прочего мусора */
+    .phpdebugbar, .fi-sidebar, .fi-topbar, .no-print, nav, header {
+        display: none !important;
+    }
+}
+
+@media print {
+    /* Фикс: заставляем модалку и её обертки не ограничивать высоту */
+    .fi-modal-window, 
+    .fi-modal-container, 
+    .fi-modal-window > div {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+        position: static !important;
+    }
+    
+    /* Твой #report-content-area теперь будет расширяться вниз */
+    #report-content-area {
+        overflow: visible !important;
+        height: auto !important;
+    }
+}

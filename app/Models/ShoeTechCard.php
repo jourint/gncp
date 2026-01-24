@@ -70,6 +70,6 @@ class ShoeTechCard extends Model
 
     public function techCardMaterials(): HasMany
     {
-        return $this->hasMany(TechCardMaterial::class);
+        return $this->hasMany(TechCardMaterial::class, 'shoe_tech_card_id');
     }
 }

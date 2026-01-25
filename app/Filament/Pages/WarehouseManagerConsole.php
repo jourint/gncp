@@ -2,121 +2,124 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\{Material, MaterialType, ShoeSole, ShoeSoleItem, MaterialMovement};
 use App\Enums\MovementType;
-use App\Models\Material;
-use App\Models\MaterialType;
-use App\Models\ShoeSole;
-use App\Models\ShoeSoleItem;
-use App\Models\Size;
-use App\Models\User;
-use App\Models\MaterialMovement;
-use Filament\Notifications\Notification;
+use App\Filament\Pages\Reports\StockRequirementsReport;
 use Filament\Pages\Page;
-use Filament\Support\Icons\Heroicon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\{Auth, DB};
 use Illuminate\Support\Collection;
+use Filament\Support\Icons\Heroicon;
 use BackedEnum;
+use App\Services\WarehouseService;
 
 class WarehouseManagerConsole extends Page
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTruck;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedComputerDesktop;
     protected string $view = 'filament.pages.warehouse-manager-console';
-    protected static ?string $title = 'АРМ - Складовщик';
+    protected static ?string $title = 'АРМ - Складской учет';
     protected static ?int $navigationSort = 10;
 
+    public ?string $selected_date = null;
     public string $movementType = MovementType::Income->value;
-    public string $entityType = 'materials'; // 'materials' или 'soles'
+    public string $entityType = 'materials';
 
-    // Для дерева
-    public array $materialTree = [];
-    public array $soleTree = [];
-    public array $expandedNodes = []; // ['node_id']
+    public array $items = [];
+    public array $expandedNodes = [];
+    public bool $isMovementModalOpen = false;
 
-    // Для добавления позиций
-    public array $items = []; // [ ['entity_id', 'quantity', 'type', 'name'], ... ]
 
     public function mount(): void
     {
-        $this->buildTrees();
+        $this->selected_date = now()->format('Y-m-d');
     }
 
-    private function buildTrees(): void
+    /**
+     * Расчет дефицита на основе заказов
+     */
+    public function getStockAnalysisProperty()
     {
-        // Материалы: тип → материалы (без цветов)
-        $this->materialTree = MaterialType::where('is_active', true)
-            ->with(['materials' => fn($q) => $q->where('is_active', true)->with('color')])
-            ->get()
-            ->map(fn($type) => [
-                'id' => $type->id,
-                'name' => $type->name,
-                'type' => 'material_type',
-                'expanded' => in_array($type->id, $this->expandedNodes),
-                'children' => $type->materials->map(fn($mat) => [
-                    'id' => $mat->id,
-                    'name' => $mat->fullName, // включает цвет, если есть
-                    'type' => 'material',
-                    'stock' => $mat->stock_quantity,
-                ])->toArray(),
-            ])->toArray();
+        return app(WarehouseService::class)->getStockAnalysis($this->selected_date);
+    }
 
-        // Подошвы: подошва → размеры (название + цвет + размер)
-        $this->soleTree = ShoeSole::where('is_active', true)
+
+
+    /**
+     * Генерирует дерево материалов для модального окна
+     */
+    public function getMaterialTreeProperty(): array
+    {
+        return MaterialType::where('is_active', true)
+            ->with(['materials.color'])
+            ->get()
+            ->map(function ($type) {
+                $nodeKey = "material_type_{$type->id}"; // Уникальный ключ
+                return [
+                    'id' => $type->id,
+                    'nodeKey' => $nodeKey,
+                    'name' => $type->name,
+                    'expanded' => in_array($nodeKey, $this->expandedNodes),
+                    'children' => $type->materials->map(fn($mat) => [
+                        'id' => $mat->id,
+                        'name' => $mat->fullName,
+                        'stock' => $mat->stock_quantity,
+                    ])->toArray(),
+                ];
+            })->toArray();
+    }
+
+    /**
+     * Генерирует дерево подошв
+     */
+    public function getSoleTreeProperty(): array
+    {
+        return ShoeSole::where('is_active', true)
             ->with(['color', 'shoeSoleItems.size'])
             ->get()
-            ->map(fn($sole) => [
-                'id' => $sole->id,
-                'name' => $sole->fullName, // уже включает цвет
-                'type' => 'sole',
-                'expanded' => in_array($sole->id, $this->expandedNodes),
-                'children' => $sole->shoeSoleItems->map(fn($item) => [
-                    'id' => $item->id,
-                    'name' => $sole->fullName . ' (' . $item->size->name . ')', // название + цвет + размер
-                    'type' => 'sole_item',
-                    'stock' => $item->stock_quantity,
-                ])->toArray(),
-            ])->toArray();
+            ->map(function ($sole) {
+                $nodeKey = "sole_{$sole->id}"; // Уникальный ключ
+                return [
+                    'id' => $sole->id,
+                    'nodeKey' => $nodeKey,
+                    'name' => $sole->fullName,
+                    'expanded' => in_array($nodeKey, $this->expandedNodes),
+                    'children' => $sole->shoeSoleItems->map(fn($item) => [
+                        'id' => $item->id,
+                        'name' => $sole->fullName . ' (' . $item->size->name . ')',
+                        'stock' => $item->stock_quantity,
+                    ])->toArray(),
+                ];
+            })->toArray();
     }
 
-    public function updatedEntityType(): void
+    // 
+    public function toggleNode(string $nodeKey): void
     {
-        $this->buildTrees();
-    }
-
-    public function toggleNode(int $nodeId): void
-    {
-        if (in_array($nodeId, $this->expandedNodes)) {
-            $this->expandedNodes = array_diff($this->expandedNodes, [$nodeId]);
+        if (in_array($nodeKey, $this->expandedNodes)) {
+            $this->expandedNodes = array_diff($this->expandedNodes, [$nodeKey]);
         } else {
-            $this->expandedNodes[] = $nodeId;
+            $this->expandedNodes[] = $nodeKey;
         }
-
-        $this->buildTrees(); // ✅ Обновляем дерево
     }
 
     public function addItemFromTree(int $entityId, string $name): void
     {
-        // Проверяем, нет ли уже такой позиции
-        $exists = collect($this->items)->some(fn($item) => $item['entity_id'] === $entityId && $item['type'] === $this->entityType);
+        $exists = collect($this->items)->some(
+            fn($item) =>
+            $item['entity_id'] === $entityId && $item['type'] === $this->entityType
+        );
 
         if ($exists) {
-            Notification::make()->title('Ошибка')->body('Позиция уже добавлена')->warning()->send();
+            Notification::make()->title('Позиция уже в списке')->warning()->send();
             return;
         }
 
         $this->items[] = [
             'entity_id' => $entityId,
-            'quantity' => 0, // по умолчанию 0
+            'quantity' => 1,
             'type' => $this->entityType,
             'name' => $name,
         ];
-    }
-
-    public function updateItemQuantity(int $index, float $quantity): void
-    {
-        if (isset($this->items[$index])) {
-            $this->items[$index]['quantity'] = $quantity;
-        }
     }
 
     public function removeItem(int $index): void
@@ -127,56 +130,58 @@ class WarehouseManagerConsole extends Page
 
     public function processMovements(): void
     {
-        if (empty($this->items)) {
-            Notification::make()->title('Ошибка')->body('Нет позиций для проведения')->danger()->send();
-            return;
-        }
+        if (empty($this->items)) return;
 
-        // Фильтруем позиции с 0
-        $validItems = collect($this->items)->filter(fn($item) => $item['quantity'] > 0);
+        DB::transaction(function () {
+            foreach ($this->items as $item) {
+                if ($item['quantity'] <= 0) continue;
 
-        if ($validItems->isEmpty()) {
-            Notification::make()->title('Ошибка')->body('Нет позиций с количеством > 0')->danger()->send();
-            return;
-        }
+                MaterialMovement::create([
+                    'movable_type' => $item['type'] === 'materials' ? Material::class : ShoeSoleItem::class,
+                    'movable_id' => $item['entity_id'],
+                    'type' => $this->movementType,
+                    'quantity' => $item['quantity'],
+                    'description' => "Ручное проведение через АРМ",
+                ]);
+            }
+        });
 
-        try {
-            DB::transaction(function () use ($validItems) {
-                foreach ($validItems as $item) {
-                    $movement = MaterialMovement::create([
-                        'movable_type' => $item['type'] === 'materials' ? Material::class : ShoeSoleItem::class,
-                        'movable_id' => $item['entity_id'],
-                        'type' => $this->movementType,
-                        'quantity' => $item['quantity'],
-                        'user_id' => Auth::id(),
-                        'description' => "Движение: {$this->movementType}",
-                    ]);
+        $this->reset(['items', 'expandedNodes']);
+        $this->dispatch('close-modal', id: 'movement-modal');
+        Notification::make()->success()->title('Операции проведены')->send();
+    }
 
-                    if ($item['type'] === 'materials') {
-                        $material = Material::findOrFail($item['entity_id']);
-                        if (MovementType::from($this->movementType)->isNegative()) {
-                            if ($material->stock_quantity < $item['quantity']) {
-                                throw new \Exception("Недостаточно материала: {$material->fullName}");
-                            }
-                            $material->decrement('stock_quantity', $item['quantity']);
-                        } else {
-                            $material->increment('stock_quantity', $item['quantity']);
-                        }
-                    } elseif ($item['type'] === 'soles') {
-                        $soleItem = ShoeSoleItem::findOrFail($item['entity_id']);
-                        if (MovementType::from($this->movementType)->isNegative()) {
-                            $soleItem->deductStock((int)$item['quantity']);
-                        } else {
-                            $soleItem->addStock((int)$item['quantity']);
-                        }
-                    }
-                }
-            });
+    public function resetToZero(int $materialId, string $name): void
+    {
+        DB::transaction(function () use ($materialId, $name) {
+            $material = Material::findOrFail($materialId);
+            $currentStock = $material->stock_quantity;
 
-            Notification::make()->title('Успешно')->body('Все движения проведены')->success()->send();
-            $this->reset(['items']);
-        } catch (\Exception $e) {
-            Notification::make()->title('Ошибка')->body($e->getMessage())->danger()->send();
-        }
+            if ($currentStock < 0) {
+                $material->movements()->create([
+                    'type' => \App\Enums\MovementType::Income,
+                    'quantity' => abs($currentStock),
+                    'description' => "Обнуление отрицательного остатка: {$name}",
+                ]);
+            }
+        });
+        Notification::make()->success()->title('Остаток обнулен')->send();
+    }
+
+    public function fillToBalance(int $materialId, float $needed, string $name): void
+    {
+        DB::transaction(function () use ($materialId, $needed, $name) {
+            $material = Material::findOrFail($materialId);
+            $toAdd = $needed - $material->stock_quantity;
+
+            if ($toAdd > 0) {
+                $material->movements()->create([
+                    'type' => \App\Enums\MovementType::Income,
+                    'quantity' => $toAdd,
+                    'description' => "Приход в баланс под план на {$this->selected_date}: {$name}",
+                ]);
+            }
+        });
+        Notification::make()->success()->title('Баланс пополнен')->send();
     }
 }

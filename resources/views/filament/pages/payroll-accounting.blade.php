@@ -73,7 +73,7 @@
             {{-- Заголовок только для печати --}}
             <div class="hidden print:block mb-6 text-center border-b-2 border-black pb-4">
                 <h1 class="text-2xl font-bold uppercase">Зарплатная ведомость</h1>
-                <p class="text-lg italic">Период: {{ \Carbon\Carbon::parse($date_from)->format('d.m.Y') }} — {{ \Carbon\Carbon::parse($date_to)->format('d.m.Y') }}</p>
+                <p class="text-lg italic">Период: {{ $date_from }} — {{ $date_to }}</p>
             </div>
 
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -158,7 +158,7 @@
                 </div>
                 <div>
                     <h2 class="text-xl font-bold leading-tight">{{ $viewing_employee?->name }}</h2>
-                    <p class="text-xs text-slate-500 uppercase tracking-widest">Лицевой счет за период: 1</p>
+                    <p class="text-xs text-slate-500 uppercase tracking-widest">Лицевой счет за период: {{ $date_from }} — {{ $date_to }}</p>
                 </div>
             </div>
         </x-slot>
@@ -242,7 +242,7 @@
                 </div>
                 <div>
                     <h2 class="text-xl font-bold leading-tight">Сводная ведомость доп. работ</h2>
-                    <p class="text-xs text-slate-500 uppercase tracking-widest italic">Отчет за период: 1</p>
+                    <p class="text-xs text-slate-500 uppercase tracking-widest italic">Отчет за период: {{ $date_from }} — {{ $date_to }}</p>
                 </div>
             </div>
         </x-slot>

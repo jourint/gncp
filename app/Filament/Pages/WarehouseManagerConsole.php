@@ -27,6 +27,7 @@ class WarehouseManagerConsole extends Page
     public array $items = [];
     public array $expandedNodes = [];
     public bool $isMovementModalOpen = false;
+    private ?array $cachedStockReport = null;
 
 
     public function mount(): void
@@ -39,7 +40,75 @@ class WarehouseManagerConsole extends Page
      */
     public function getStockAnalysisProperty()
     {
-        return app(WarehouseService::class)->getStockAnalysis($this->selected_date);
+        $report = $this->getStockReport();
+        return app(WarehouseService::class)->getStockAnalysis($this->selected_date, $report);
+    }
+
+    /**
+     * Получить кэшированный отчёт
+     */
+    private function getStockReport(): array
+    {
+        if ($this->cachedStockReport === null) {
+            $this->cachedStockReport = app(StockRequirementsReport::class)->execute($this->selected_date);
+        }
+        return $this->cachedStockReport;
+    }
+
+    /**
+     * Расчет дефицита подошв на основе заказов (по размерам)
+     */
+    public function getSoleAnalysisProperty()
+    {
+        $report = $this->getStockReport();
+        $solesNeeded = $report['soles_needed'] ?? [];
+
+        // Предзагружаем все ShoeSoleItems одним запросом
+        $soleIds = array_column($solesNeeded, 'sole_id');
+        $allSoleItems = ShoeSoleItem::whereIn('shoe_sole_id', $soleIds)
+            ->get()
+            ->keyBy(fn($item) => $item->shoe_sole_id . '_' . $item->size_id);
+
+        $result = collect();
+
+        foreach ($solesNeeded as $sole) {
+            $soleId = $sole['sole_id'];
+            $soleName = $sole['sole_name'];
+            $sizes = $sole['sizes'] ?? [];
+
+            // Если нет размеров, выводим общее количество
+            if (empty($sizes)) {
+                $totalNeeded = $sole['total_needed'] ?? 0;
+                $totalStock = ShoeSoleItem::where('shoe_sole_id', $soleId)->sum('stock_quantity');
+
+                $result->push([
+                    'sole_id' => $soleId,
+                    'name' => $soleName,
+                    'size' => 'Всего',
+                    'needed' => $totalNeeded,
+                    'stock' => $totalStock,
+                    'diff' => $totalStock - $totalNeeded,
+                ]);
+            } else {
+                // Выводим по каждому размеру
+                foreach ($sizes as $sizeId => $needed) {
+                    $key = $soleId . '_' . $sizeId;
+                    $soleItem = $allSoleItems->get($key);
+                    $stock = $soleItem?->stock_quantity ?? 0;
+
+                    $result->push([
+                        'sole_id' => $soleId,
+                        'name' => $soleName,
+                        'size' => $sizeId,
+                        'needed' => $needed,
+                        'stock' => $stock,
+                        'diff' => $stock - $needed,
+                    ]);
+                }
+            }
+        }
+
+        return $result->values()->toArray();
     }
 
 
@@ -51,6 +120,7 @@ class WarehouseManagerConsole extends Page
     {
         return MaterialType::where('is_active', true)
             ->with(['materials.color'])
+            ->orderBy('name')
             ->get()
             ->map(function ($type) {
                 $nodeKey = "material_type_{$type->id}"; // Уникальный ключ
@@ -59,11 +129,11 @@ class WarehouseManagerConsole extends Page
                     'nodeKey' => $nodeKey,
                     'name' => $type->name,
                     'expanded' => in_array($nodeKey, $this->expandedNodes),
-                    'children' => $type->materials->map(fn($mat) => [
+                    'children' => $type->materials->sortBy('name')->map(fn($mat) => [
                         'id' => $mat->id,
                         'name' => $mat->fullName,
                         'stock' => $mat->stock_quantity,
-                    ])->toArray(),
+                    ])->values()->toArray(),
                 ];
             })->toArray();
     }
@@ -75,6 +145,7 @@ class WarehouseManagerConsole extends Page
     {
         return ShoeSole::where('is_active', true)
             ->with(['color', 'shoeSoleItems.size'])
+            ->orderBy('name')
             ->get()
             ->map(function ($sole) {
                 $nodeKey = "sole_{$sole->id}"; // Уникальный ключ
@@ -83,11 +154,11 @@ class WarehouseManagerConsole extends Page
                     'nodeKey' => $nodeKey,
                     'name' => $sole->fullName,
                     'expanded' => in_array($nodeKey, $this->expandedNodes),
-                    'children' => $sole->shoeSoleItems->map(fn($item) => [
+                    'children' => $sole->shoeSoleItems->sortBy(fn($item) => $item->size->name)->map(fn($item) => [
                         'id' => $item->id,
                         'name' => $sole->fullName . ' (' . $item->size->name . ')',
                         'stock' => $item->stock_quantity,
-                    ])->toArray(),
+                    ])->values()->toArray(),
                 ];
             })->toArray();
     }
@@ -180,6 +251,45 @@ class WarehouseManagerConsole extends Page
                     'quantity' => $toAdd,
                     'description' => "Приход в баланс под план на {$this->selected_date}: {$name}",
                 ]);
+            }
+        });
+        Notification::make()->success()->title('Баланс пополнен')->send();
+    }
+
+    public function resetSoleToZero(int $soleId, string $name): void
+    {
+        DB::transaction(function () use ($soleId, $name) {
+            $items = ShoeSoleItem::where('shoe_sole_id', $soleId)->get();
+
+            foreach ($items as $item) {
+                if ($item->stock_quantity < 0) {
+                    $item->movements()->create([
+                        'type' => \App\Enums\MovementType::Income,
+                        'quantity' => abs($item->stock_quantity),
+                        'description' => "Обнуление отрицательного остатка: {$name}",
+                    ]);
+                }
+            }
+        });
+        Notification::make()->success()->title('Остаток обнулен')->send();
+    }
+
+    public function fillSoleToBalance(int $soleId, float $needed, string $name): void
+    {
+        DB::transaction(function () use ($soleId, $needed, $name) {
+            $totalStock = ShoeSoleItem::where('shoe_sole_id', $soleId)->sum('stock_quantity');
+            $toAdd = $needed - $totalStock;
+
+            if ($toAdd > 0) {
+                // Добавляем прирост к первому доступному размеру подошвы
+                $firstItem = ShoeSoleItem::where('shoe_sole_id', $soleId)->first();
+                if ($firstItem) {
+                    $firstItem->movements()->create([
+                        'type' => \App\Enums\MovementType::Income,
+                        'quantity' => $toAdd,
+                        'description' => "Приход в баланс под план на {$this->selected_date}: {$name}",
+                    ]);
+                }
             }
         });
         Notification::make()->success()->title('Баланс пополнен')->send();

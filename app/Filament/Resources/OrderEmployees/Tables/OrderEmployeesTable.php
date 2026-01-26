@@ -18,8 +18,16 @@ class OrderEmployeesTable
             ->columns([
                 TextColumn::make('employee.fullName')
                     ->label('Сотрудник')
-                    ->sortable()
-                    ->searchable(),
+                    ->searchable(query: function ($query, string $search) {
+                        $query->whereHas('employee', function ($q) use ($search) {
+                            $q->where('name', 'ilike', "%{$search}%");
+                        });
+                    })
+                    // Сортировка по реальной колонке name
+                    ->sortable(query: function ($query, $direction) {
+                        return $query->join('employees', 'order_employees.employee_id', '=', 'employees.id')
+                            ->orderBy('employees.name', $direction);
+                    }),
 
                 TextColumn::make('order_id')
                     ->label('Заказ')

@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     {{-- 1. Верхняя панель настроек --}}
     <x-filament::section>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <x-filament::input.wrapper label="Дата заказов">
                 <x-filament::input type="date" wire:model.live="selected_date" />
             </x-filament::input.wrapper>
@@ -24,6 +24,44 @@
                     @endforeach
                 </x-filament::input.select>
             </x-filament::input.wrapper>
+
+            <x-filament::dropdown>
+                <x-slot name="trigger">
+                    <x-filament::button 
+                        color="warning"
+                        icon="heroicon-m-sparkles"
+                        class="w-full"
+                    >
+                        Распределить остатки
+                    </x-filament::button>
+                </x-slot>
+
+                <x-filament::dropdown.list>
+                    <x-filament::dropdown.list.item 
+                        wire:click="autoDistribute"
+                        wire:confirm="Это действие автоматически распределит все ОСТАВШИЕСЯ пары поровну между всеми активными сотрудниками цеха. Продолжить?"
+                        icon="heroicon-m-sparkles"
+                    >
+                        1: Поровну между всеми
+                    </x-filament::dropdown.list.item>
+
+                    <x-filament::dropdown.list.item 
+                        wire:confirm="Это действие автоматически распределит все ОСТАВШИЕСЯ пары поровну между всеми активными сотрудниками цеха. Продолжить?"
+                        icon="heroicon-m-sparkles"
+                        disabled
+                    >
+                        2: В разработке...
+                    </x-filament::dropdown.list.item>
+
+                    <x-filament::dropdown.list.item 
+                        wire:confirm="Это действие автоматически распределит все ОСТАВШИЕСЯ пары поровну между всеми активными сотрудниками цеха. Продолжить?"
+                        icon="heroicon-m-sparkles"
+                        disabled
+                    >
+                        3: В разработке...
+                    </x-filament::dropdown.list.item>
+                </x-filament::dropdown.list>
+            </x-filament::dropdown>
         </div>
     </x-filament::section>
 
@@ -137,22 +175,8 @@
         </x-filament::section>
     </div>
 
-    {{-- 3. Секция Магического деления --}}
-    <div class="flex justify-center">
-        <x-filament::button 
-            wire:click="autoDistribute" 
-            color="warning" 
-            size="xl"
-            icon="heroicon-m-sparkles"
-            class="w-full max-w-md shadow-xl"
-            wire:confirm="Это действие автоматически распределит все ОСТАВШИЕСЯ пары поровну между всеми активными сотрудниками цеха. Продолжить?"
-        >
-            РАСПРЕДЕЛИТЬ ОСТАТКИ АВТОМАТИЧЕСКИ
-        </x-filament::button>
-    </div>
-
-    {{-- 4. Сводная таблица загрузки всего цеха --}}
-    <x-filament::section title="Общая картина по цеху" icon="heroicon-m-chart-bar" class="mt-8">
+    {{-- 3. Сводная таблица загрузки всего цеха --}}
+    <x-filament::section title="Общая картина по цеху" icon="heroicon-m-chart-bar" class="-mt-4">
         <x-slot name="heading">
             <div class="flex items-center gap-2">
                     <span>Распределенные пары по сотруднникам цеха</span>
@@ -162,9 +186,9 @@
             <table class="w-full text-left text-sm">
                 <thead>
                     <tr class="border-b border-gray-100 dark:border-white/10 text-gray-400 text-[10px] uppercase font-black">
-                        <th class="py-3 px-4">Сотрудник</th>
-                        <th class="py-3 px-4">Модели (пары)</th>
-                        <th class="py-3 px-4 text-right">Всего</th>
+                        <th class="py-2 px-4">Сотрудник</th>
+                        <th class="py-2 px-4">Модели (пары)</th>
+                        <th class="py-2 px-4 text-right">Всего</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50 dark:divide-white/5 uppercase text-[11px]">

@@ -25,8 +25,12 @@ class ShoeTechCardForm
                             ->schema([
                                 Select::make('shoe_model_id')
                                     ->label('Модель обуви')
-                                    ->relationship('shoeModel', 'name')
-                                    ->getOptionLabelFromRecordUsing(fn($record) => "{$record->name} ({$record->shoeType?->name})")
+                                    ->relationship(
+                                        name: 'shoeModel',
+                                        titleAttribute: 'name', // По какому полю искать в БД
+                                        modifyQueryUsing: fn($query) => $query->with('shoeType') // Грузим тип заранее
+                                    )
+                                    ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
                                     ->required()
                                     ->searchable()
                                     ->preload(),
@@ -71,7 +75,11 @@ class ShoeTechCardForm
                     ->schema([
                         Select::make('shoe_sole_id')
                             ->label('Подошва')
-                            ->relationship('shoeSole', 'name')
+                            ->relationship(
+                                name: 'shoeSole',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn($query) => $query->with('color') // Убираем N+1 для цвета подошвы
+                            )
                             ->getOptionLabelFromRecordUsing(
                                 fn($record) => $record->fullName
                             )
@@ -81,7 +89,11 @@ class ShoeTechCardForm
 
                         Select::make('material_id')
                             ->label('Материал основной')
-                            ->relationship('material', 'name')
+                            ->relationship(
+                                name: 'material',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn($query) => $query->with('color') // Убираем N+1 для цвета материала
+                            )
                             ->getOptionLabelFromRecordUsing(
                                 fn($record) => $record->fullName
                             )

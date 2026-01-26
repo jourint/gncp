@@ -42,7 +42,11 @@ class PositionsRelationManager extends RelationManager
 
                 Select::make('material_lining_id')
                     ->label('Подкладка')
-                    ->relationship('materialLining', 'name')
+                    ->relationship(
+                        name: 'materialLining',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn($query) => $query->with('color')
+                    )
                     ->getOptionLabelFromRecordUsing(
                         fn($record) => $record->fullName
                     )
@@ -55,14 +59,10 @@ class PositionsRelationManager extends RelationManager
                     ->placeholder('Выберите техкарту')
                     ->options(function (callable $get) {
                         $techCardId = $get('shoe_tech_card_id');
-
                         if (!$techCardId) return [];
-
                         $techCard = ShoeTechCard::with('shoeModel')->find($techCardId);
                         $availableSizes = $techCard?->shoeModel?->available_sizes ?? [];
-
-                        return Size::whereIn('id', $availableSizes)
-                            ->pluck('name', 'id');
+                        return Size::whereIn('id', $availableSizes)->pluck('name', 'id');
                     })
                     ->required()
                     ->searchable()
@@ -81,6 +81,11 @@ class PositionsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->with([
+                'shoeTechCard.color',
+                'materialLining.color',
+                'size' // Теперь подгружаем размер как связь
+            ]))
             ->recordTitleAttribute('shoe_tech_card_id')
             ->columns([
                 ColorColumn::make('shoeTechCard.color.hex')

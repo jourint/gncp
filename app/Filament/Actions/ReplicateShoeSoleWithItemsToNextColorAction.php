@@ -48,7 +48,7 @@ class ReplicateShoeSoleWithItemsToNextColorAction extends Action
                         $newSole->save();
 
                         // 3. Копируем все размеры
-                        foreach ($record->items as $item) {
+                        foreach ($record->shoeSoleItems as $item) {
                             $newItem = $item->replicate();
                             $newItem->shoe_sole_id = $newSole->id;
                             $newItem->save();

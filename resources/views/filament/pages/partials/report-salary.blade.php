@@ -1,6 +1,6 @@
 <div class="space-y-4">
     <div class="flex justify-between items-end border-b-2 border-slate-900 pb-1">
-        <h2 class="text-2xl font-black uppercase tracking-tighter">Ведомость начислений</h2>
+        <h2 class="text-2xl font-black tracking-tighter">Ведомость начислений от заказа на {{ $selected_date }}</h2>
         <div class="text-2xl font-black text-indigo-600 leading-none">
             {{ number_format($data->pluck('employees')->flatten(1)->sum('total_sum'), 0, '.', ' ') }} ₴
         </div>

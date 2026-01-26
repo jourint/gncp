@@ -22,7 +22,7 @@ use App\Filament\Actions\CreateAllSizesForShoeSoleAction;
 
 class ItemsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'items';
+    protected static string $relationship = 'shoeSoleItems';
     protected static ?string $title = 'Размерная сетка';
 
     public function form(Schema $schema): Schema

@@ -1,10 +1,10 @@
 <div class="space-y-1 print:text-black">
     <div class="flex justify-between items-center border-b-2 border-rose-600 pb-1">
-        <h2 class="text-xl font-black uppercase italic text-rose-700 leading-none">
-            План отгрузки на {{ \Carbon\Carbon::parse($selected_date)->addDays(2)->format('d.m.Y') }}
+        <h2 class="text-xl font-black italic text-rose-700 leading-none">
+            План отгрузки на {{ \Carbon\Carbon::parse($selected_date)->addDays(2)->format('d.m.Y') }} (заказ от {{ $selected_date }})
         </h2>
-        <div class="text-xl font-black leading-none uppercase">
-            ИТОГО: {{ (int)collect($data)->where('type', 'overall_total')->first()['total_quantity'] }} пар
+        <div class="text-xl font-black leading-none">
+            Итого: {{ declension_pairs((int)collect($data)->where('type', 'overall_total')->first()['total_quantity']) }}
         </div>
     </div>
 
@@ -15,7 +15,7 @@
             @endphp
             <div class="mt-2 mb-1 flex justify-between items-center bg-slate-50 border-y border-slate-300 px-3 py-0.5">
                 <h3 class="text-md font-black uppercase text-slate-900">{{ $row['customer_name'] }}</h3>
-                <span class="font-bold text-slate-700 text-sm italic">Отгрузить: {{ (int)$cTotal }} пар</span>
+                <span class="font-bold text-slate-700 text-sm italic">Отгрузить: {{ declension_pairs((int)$cTotal) }}</span>
             </div>
         @elseif($row['type'] === 'model_row')
             <div class="ml-4 py-1 border-b border-slate-100 last:border-0">
@@ -37,7 +37,7 @@
                         </div>
                     @endforeach
                     <div class="ml-auto font-bold text-slate-400 text-xs self-center">
-                        {{ (int)$row['total_quantity'] }} пар
+                        {{ declension_pairs((int)$row['total_quantity']) }}
                     </div>
                 </div>
             </div>

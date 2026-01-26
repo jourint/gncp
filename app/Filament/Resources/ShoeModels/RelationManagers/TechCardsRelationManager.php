@@ -43,22 +43,37 @@ class TechCardsRelationManager extends RelationManager
 
                 Select::make('shoe_sole_id')
                     ->label('Подошва')
-                    ->relationship('shoeSole', 'name')
-                    ->getOptionLabelFromRecordUsing(fn($record) => "{$record->name} (Цвет: {$record->color?->name})")
+                    ->relationship(
+                        name: 'shoeSole',
+                        titleAttribute: 'name',
+                        // РЕШЕНИЕ: Подгружаем цвет подошвы для генерации меток (Labels) в выпадающем списке
+                        modifyQueryUsing: fn($query) => $query->with('color')
+                    )
+                    ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
                     ->required()
                     ->searchable()
                     ->preload(),
 
                 Select::make('material_id')
                     ->label('Материал основной')
-                    ->relationship('material', 'name')
+                    ->relationship(
+                        name: 'material',
+                        titleAttribute: 'name',
+                        // Подгружаем цвет материала для его fullName
+                        modifyQueryUsing: fn($query) => $query->with('color')
+                    )
                     ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
                     ->required()
                     ->searchable(),
 
                 Select::make('material_two_id')
                     ->label('Доп. материал')
-                    ->relationship('materialTwo', 'name')
+                    ->relationship(
+                        name: 'materialTwo',
+                        titleAttribute: 'name',
+                        // Подгружаем цвет материала для его fullName
+                        modifyQueryUsing: fn($query) => $query->with('color')
+                    )
                     ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
                     ->searchable(),
 
@@ -77,6 +92,11 @@ class TechCardsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->with([
+                'color',            // Цвет самой техкарты
+                'shoeSole',         // Сама подошва
+                'shoeSole.color',   // Цвет, который сидит ВНУТРИ подошвы (для fullName)
+            ]))
             ->recordTitleAttribute('name')
             ->columns([
                 ImageColumn::make('image_path')
@@ -85,7 +105,7 @@ class TechCardsRelationManager extends RelationManager
 
                 TextColumn::make('name')
                     ->label('Спецификация')
-                    ->description(fn($record) => "Подошва: {$record->shoeSole?->name}"),
+                    ->description(fn($record) => "Подошва: {$record->shoeSole?->fullName}"),
 
                 TextColumn::make('color.name')
                     ->label('Цвет')

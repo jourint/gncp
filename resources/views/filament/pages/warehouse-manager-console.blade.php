@@ -19,8 +19,11 @@
             </x-filament::button>
         </div>
 
-        {{-- Таблица дефицита --}}
+        {{-- Таблица дефицита материалов --}}
         @include('filament.pages.partials.warehouse-analysis-table')
+
+        {{-- Таблица дефицита подошв --}}
+        @include('filament.pages.partials.warehouse-soles-table')
 
         {{-- Вынесенная модалка --}}
         <x-filament::modal id="movement-modal" width="6xl" sticky-header>

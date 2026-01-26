@@ -83,7 +83,7 @@ class MovementsRelationManager extends RelationManager
                     ->limit(50),
 
                 TextColumn::make('created_at')
-                    ->label('Дата')
+                    ->label('Дата создания')
                     ->dateTime()
                     ->sortable(),
             ])

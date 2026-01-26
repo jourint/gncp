@@ -7,17 +7,22 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use App\Traits\HasCustomTableSearch;
 
 class ShoeSoleItemsTable
 {
+    use HasCustomTableSearch;
+
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->with(['shoeSole.color']))
+            ->defaultSort('updated_at', 'desc')
             ->columns([
                 TextColumn::make('shoeSole.fullName')
                     ->label('Подошва')
-                    ->sortable()
-                    ->searchable(),
+                    ->searchable(query: self::searchRelation('shoeSole', ['name', 'color.name']))
+                    ->sortable(query: self::sortRelation('shoe_soles', 'shoe_sole_items.shoe_sole_id', 'name')),
 
                 TextColumn::make('size_id')
                     ->label('Размер')

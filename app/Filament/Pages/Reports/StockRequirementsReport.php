@@ -4,9 +4,10 @@ namespace App\Filament\Pages\Reports;
 
 use App\Models\OrderPosition;
 use App\Models\Material;
+use Faker\Provider\Base;
 use Illuminate\Support\Collection;
 
-class StockRequirementsReport implements ReportContract
+class StockRequirementsReport extends BaseReport
 {
     public function execute(string $date): array
     {
@@ -19,16 +20,12 @@ class StockRequirementsReport implements ReportContract
                 'order.customer', // Для детализации
                 'shoeTechCard.techCardMaterials.material.color',
                 'shoeTechCard.techCardMaterials.material.materialType.unit', // Подгружаем Unit (Sushi)
-                'shoeTechCard.shoeModel.shoeInsole'
+                'shoeTechCard.shoeSole.color'
             ])
             ->get();
 
         $materialsForCutting = collect();
-        $materialsForInsoles = collect();
-
-        // 2. Предварительная загрузка материалов для стелек (так как они в JSON)
-        $insoleMatIds = $this->extractInsoleMatIds($orderPositions);
-        $insoleMats = Material::with(['materialType.unit', 'color'])->whereIn('id', $insoleMatIds)->get()->keyBy('id');
+        $solesNeeded = collect(); // Группировка: sole_id => [sizes => [size_id => qty]]
 
         foreach ($orderPositions as $pos) {
             $q = $pos->quantity;
@@ -41,22 +38,34 @@ class StockRequirementsReport implements ReportContract
                 }
             }
 
-            // Агрегация материалов для стелек
-            $insole = $pos->shoeTechCard?->shoeModel?->shoeInsole;
-            if ($insole && $insole->tech_card) {
-                $components = is_string($insole->tech_card) ? json_decode($insole->tech_card, true) : $insole->tech_card;
-                foreach ($components as $c) {
-                    $mat = $insoleMats->get($c['material_id'] ?? null);
-                    if ($mat) {
-                        $this->aggregate($materialsForInsoles, $mat, $q * ($c['count'] ?? 0), $customerName);
-                    }
-                }
+            // Агрегация подошв по размерам
+            $sole = $pos->shoeTechCard?->shoeSole;
+            if ($sole) {
+                $soleName = $sole->fullName;
+                $id = $sole->id;
+                $sizeId = $pos->size_id ?? 0;
+
+                $item = $solesNeeded->get($id, [
+                    'sole_id'        => $id,
+                    'sole_name'      => $soleName,
+                    'sizes'          => [], // Детализация по размерам: [size_id => qty]
+                    'total_needed'   => 0,
+                    'details'        => [] // Детализация по клиентам
+                ]);
+
+                // Добавляем размер и количество
+                $item['sizes'][$sizeId] = ($item['sizes'][$sizeId] ?? 0) + $q;
+
+                $item['total_needed'] += $q;
+                $item['details'][$customerName] = ($item['details'][$customerName] ?? 0) + $q;
+
+                $solesNeeded->put($id, $item);
             }
         }
 
         return [
             'materials_for_cutting' => $materialsForCutting->sortBy('material_name')->values()->toArray(),
-            'materials_for_insoles' => $materialsForInsoles->sortBy('material_name')->values()->toArray(),
+            'soles_needed' => $solesNeeded->sortBy('sole_name')->values()->toArray(),
         ];
     }
 
@@ -84,33 +93,42 @@ class StockRequirementsReport implements ReportContract
         $col->put($id, $item);
     }
 
-    private function extractInsoleMatIds(Collection $pos): array
-    {
-        return $pos->flatMap(function ($p) {
-            $tc = $p->shoeTechCard?->shoeModel?->shoeInsole?->tech_card;
-            $decoded = is_string($tc) ? json_decode($tc, true) : $tc;
-            return collect($decoded)->pluck('material_id');
-        })->filter()->unique()->toArray();
-    }
-
     public function toExcel(string $date): Collection
     {
         $data = $this->execute($date);
         $rows = collect();
 
-        $categories = [
-            'Крой' => $data['materials_for_cutting'],
-            'Стельки' => $data['materials_for_insoles']
-        ];
+        // Экспорт материалов для кроя
+        foreach ($data['materials_for_cutting'] as $item) {
+            $rows->push([
+                'Категория' => 'Крой',
+                'Наименование'  => $item['material_name'],
+                'Размер'    => '',
+                'Кол-во'    => $item['total_needed'],
+                'Ед. изм.'  => $item['unit_name'],
+            ]);
+        }
 
-        foreach ($categories as $catName => $items) {
-            foreach ($items as $item) {
+        // Экспорт подошв с размерами
+        foreach ($data['soles_needed'] as $item) {
+            if (empty($item['sizes'])) {
                 $rows->push([
-                    'Категория' => $catName,
-                    'Материал'  => $item['material_name'],
+                    'Категория' => 'Подошвы',
+                    'Наименование'  => $item['sole_name'],
+                    'Размер'    => 'Всего',
                     'Кол-во'    => $item['total_needed'],
-                    'Ед. изм.'  => $item['unit_name'],
+                    'Ед. изм.'  => 'шт.',
                 ]);
+            } else {
+                foreach ($item['sizes'] as $sizeId => $qty) {
+                    $rows->push([
+                        'Категория' => 'Подошвы',
+                        'Наименование'  => $item['sole_name'],
+                        'Размер'    => $sizeId,
+                        'Кол-во'    => $qty,
+                        'Ед. изм.'  => 'шт.',
+                    ]);
+                }
             }
         }
 

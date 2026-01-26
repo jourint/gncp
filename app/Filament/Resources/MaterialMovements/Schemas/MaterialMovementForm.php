@@ -24,6 +24,7 @@ class MaterialMovementForm
                         MorphToSelect\Type::make(Material::class)
                             ->titleAttribute('name') // Обязательный атрибут для поиска
                             ->label('Материал')
+                            ->modifyOptionsQueryUsing(fn($query) => $query->with('color'))
                             ->getOptionLabelFromRecordUsing(
                                 fn(Material $record) => $record->fullName
                             ),
@@ -32,6 +33,7 @@ class MaterialMovementForm
                         MorphToSelect\Type::make(ShoeSoleItem::class)
                             ->titleAttribute('name') // Обязательный атрибут для поиска
                             ->label('Подошва')
+                            ->modifyOptionsQueryUsing(fn($query) => $query->with(['shoeSole.color', 'size']))
                             ->getOptionLabelFromRecordUsing(
                                 fn(ShoeSoleItem $record) => "{$record->shoeSole?->fullName} [{$record->size?->name}]"
                             ),

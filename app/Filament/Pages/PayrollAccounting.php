@@ -96,7 +96,7 @@ class PayrollAccounting extends Page
     /**
      * Логика экспорта
      */
-    public function exportToCsv()
+    public function exportToExcel()
     {
         $exporter = app(PayrollCsvExporter::class);
         $data = $exporter->export($this->payroll_data, $this->date_from, $this->date_to);

@@ -25,7 +25,7 @@ class CreateAllSizesForShoeSoleAction extends Action
                 $allSizes = Size::all();
 
                 // 2. Получаем уже существующие размеры для этой подошвы
-                $existingSizeIds = $record->items()->pluck('size_id')->toArray();
+                $existingSizeIds = $record->shoeSoleItems()->pluck('size_id')->toArray();
 
                 // 3. Находим отсутствующие размеры
                 $missingSizes = $allSizes->whereNotIn('id', $existingSizeIds);

@@ -55,16 +55,16 @@ class WorkDistribution extends Page
         // Ищем все позиции на дату
         return OrderPosition::query()
             ->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
+            // 1. Жадная загрузка всего дерева связей
             ->with(['shoeTechCard.shoeModel.shoeType', 'size'])
+            // 2. ГЕНИАЛЬНЫЙ ХОД: Считаем сумму распределенных пар для текущего цеха одним подзапросом
+            ->withSum(['orderEmployees as distributed' => function ($query) {
+                $query->whereHas('employee', fn($q) => $q->where('job_position_id', $this->selected_job_id));
+            }], 'quantity')
             ->get()
             ->map(function ($pos) {
-                // Считаем сколько уже распределено именно СОТРУДНИКАМ ТЕКУЩЕГО ЦЕХА
-                $distributed = OrderEmployee::query()
-                    ->where('order_position_id', $pos->id)
-                    ->whereHas('employee', fn($q) => $q->where('job_position_id', $this->selected_job_id))
-                    ->sum('quantity');
-
-                $pos->remaining = $pos->quantity - $distributed;
+                // Теперь $pos->distributed уже содержит число из базы
+                $pos->remaining = $pos->quantity - ($pos->distributed ?? 0);
                 $pos->price = $this->calculatePrice($pos);
 
                 return $pos;
@@ -166,13 +166,18 @@ class WorkDistribution extends Page
         return Employee::query()
             ->where('job_position_id', $this->selected_job_id)
             ->where('is_active', true)
+            // Считаем общую загрузку сотрудника на дату одним запросом
+            ->withSum(['orderEmployees as total_qty' => function ($query) {
+                $query->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date));
+            }], 'quantity')
+            // Для деталей (группировка по моделям) всё же придется подгрузить связи, 
+            // но теперь только для summary
             ->with(['orderEmployees' => function ($query) {
                 $query->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
                     ->with('orderPosition.shoeTechCard');
             }])
             ->get()
             ->map(function ($employee) {
-                // Группируем работы сотрудника по моделям для краткости в таблице
                 $summary = $employee->orderEmployees->groupBy('orderPosition.shoeTechCard.name')
                     ->map(fn($group) => $group->sum('quantity'));
 
@@ -180,8 +185,8 @@ class WorkDistribution extends Page
                     'id' => $employee->id,
                     'name' => $employee->name,
                     'skill' => $employee->skill_level,
-                    'total_qty' => $employee->orderEmployees->sum('quantity'),
-                    'details' => $summary, // Названия моделей => кол-во
+                    'total_qty' => $employee->total_qty ?? 0, // Поле из withSum
+                    'details' => $summary,
                 ];
             })
             ->sortByDesc('total_qty');

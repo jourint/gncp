@@ -8,26 +8,33 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use App\Enums\OrderStatus;
+use App\Traits\HasCustomTableSearch;
 
 class OrdersTable
 {
+    use HasCustomTableSearch;
+
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->with(['customer']))
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('fullName')
                     ->label('Клиент')
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(query: self::searchRelation('customer', 'name'))
+                    ->sortable(query: self::sortRelation('customers', 'orders.customer_id', 'name')),
 
                 TextColumn::make('started_at')
                     ->label('Дата начала')
                     ->date('d.m.Y')
+                    ->searchable()
                     ->sortable(),
 
                 TextColumn::make('status')
                     ->label('Статус')
                     ->badge()
+                    ->sortable()
                     ->color(fn(OrderStatus $state): string => match ($state) {
                         OrderStatus::Pending => 'gray',
                         OrderStatus::Processing => 'warning',

@@ -1,6 +1,8 @@
 <div class="report-production">
-    <h2 class="text-2xl font-black mb-6 uppercase border-b-2 border-black pb-2">
-        План работ: {{ $active_report === 'sewing' ? 'Швейный цех' : 'Сапожный цех' }} ({{ $selected_date }})
+    <h2 class="text-2xl font-black mb-6 border-b-2 border-black pb-2">
+        План: {{ $active_report === 'sewing' 
+        ? 'Швейный цех ' . \Carbon\Carbon::createFromFormat('Y-m-d', $selected_date)->addDays()->format('d.m.Y')
+        : 'Сапожный цех '  . \Carbon\Carbon::createFromFormat('Y-m-d', $selected_date)->addDays(2)->format('d.m.Y') }} (заказ от {{ $selected_date }})
     </h2>
 
     @php 
@@ -46,7 +48,7 @@
             </table>
             
             <div class="mt-2 text-right font-bold text-sm uppercase tracking-widest text-gray-500">
-                Всего по сотруднику: {{ $tasks->sum('total_quantity') }} пар
+                Всего по сотруднику: {{ declension_pairs((int)$tasks->sum('total_quantity')) }}
             </div>
         </div>
     @empty

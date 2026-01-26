@@ -13,7 +13,7 @@
             {{-- Модель (спокойный заголовок) --}}
             <div class="bg-slate-50 px-3 py-0.5 flex justify-between items-center border-b border-slate-300">
                 <span class="text-sm font-bold text-slate-500">{{ $modelName }}</span>
-                <span class="text-xs italic text-slate-400">{{ $techCards->sum('total_quantity') }} пар</span>
+                <span class="text-xs italic text-slate-400">{{ declension_pairs((int)$techCards->sum('total_quantity')) }}</span>
             </div>
 
             <div class="p-2 space-y-3">
@@ -32,7 +32,7 @@
                                 </div>
                             @endforeach
                             <div class="font-black text-slate-900 text-sm italic ml-4">
-                                {{ $tc['total_quantity'] }} пар
+                                {{ declension_pairs((int)$tc['total_quantity']) }}
                             </div>
                         </div>
                     </div>
@@ -53,12 +53,12 @@
             @foreach($typeSummary as $typeName => $group)
                 <span class="font-bold text-slate-600">
                     <span class="text-slate-400 font-medium italic">{{ $typeName }}:</span> 
-                    {{ $group->sum('total_quantity') }}
+                    {{ declension_pairs((int)$group->sum('total_quantity')) }}
                 </span>
             @endforeach
         </div>
         <div class="font-black text-lg italic text-slate-900">
-            Итого: {{ $items->sum('total_quantity') }} пар
+            Итого: {{ declension_pairs((int)$items->sum('total_quantity')) }}
         </div>
     </div>
 </div>

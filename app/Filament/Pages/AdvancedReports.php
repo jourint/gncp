@@ -72,6 +72,6 @@ class AdvancedReports extends Page
 
         $data = $module->toExcel($this->selected_date);
 
-        return $this->downloadCsv($data, "report-{$type}-{$this->selected_date}.csv");
+        return $this->streamCsv($data, "report-{$type}-{$this->selected_date}.csv");
     }
 }

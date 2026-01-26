@@ -1,9 +1,9 @@
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
     {{-- Левая колонка: Дерево --}}
-    <div class="space-y-4">
-        <div class="flex flex-col gap-2">
-            <label class="text-xs font-bold text-gray-500 uppercase">Тип товаров</label>
-            <x-filament::tabs label="Entity Type">
+    <div class="space-y-4 flex flex-col h-full">
+        <div class="flex items-center justify-between h-[40px]">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Тип товаров</label>
+            <x-filament::tabs label="Entity Type" class="border-none shadow-none bg-transparent">
                 <x-filament::tabs.item wire:click="$set('entityType', 'materials')" :active="$entityType === 'materials'">
                     Материалы
                 </x-filament::tabs.item>
@@ -13,8 +13,8 @@
             </x-filament::tabs>
         </div>
 
-        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
-            <div class="space-y-2 max-h-96 overflow-y-auto pr-2">
+        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700 flex-1 min-h-[500px]">
+            <div class="space-y-2 max-h-[500px] overflow-y-auto pr-2">
                 @foreach($entityType === 'materials' ? $this->materialTree : $this->soleTree as $node)
                     <div class="pl-2 border-l-2 border-gray-200 dark:border-gray-700">
                         <div class="select-none font-bold text-gray-900 dark:text-gray-100 flex items-center cursor-pointer py-1 text-sm"
@@ -50,33 +50,39 @@
     </div>
 
     {{-- Правая колонка: Корзина --}}
-    <div class="space-y-4">
-        <div class="flex flex-col gap-2">
-            <label class="text-xs font-bold text-gray-500 uppercase">Параметры операции</label>
-            <x-filament::input.wrapper>
-                <select wire:model="movementType" class="w-full border-none bg-transparent py-1.5 text-sm">
-                    @foreach(\App\Enums\MovementType::cases() as $case)
-                        <option value="{{ $case->value }}">{{ $case->label() }}</option>
-                    @endforeach
-                </select>
-            </x-filament::input.wrapper>
+    <div class="space-y-4 flex flex-col h-full">
+        <div class="flex items-center justify-between h-[40px]">
+            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Параметры</label>
+            <x-filament::tabs label="Movement Type" class="border-none shadow-none bg-transparent">
+                @foreach(\App\Enums\MovementType::cases() as $case)
+                    <x-filament::tabs.item 
+                        wire:click="$set('movementType', '{{ $case->value }}')" 
+                        :active="$movementType === $case->value"
+                    >
+                        {{ $case->label() }}
+                    </x-filament::tabs.item>
+                @endforeach
+            </x-filament::tabs>
         </div>
 
-        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700 min-h-[300px]">
+        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700 flex-1 flex flex-col min-h-[500px]">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Позиции к проведению:</h3>
 
-            <div class="space-y-2 max-h-80 overflow-y-auto pr-2">
+            <div class="space-y-2 overflow-y-auto pr-2 flex-1 min-h-0">
                 @forelse($items as $index => $item)
                     <div class="flex justify-between items-center bg-white dark:bg-gray-700 p-3 rounded shadow-sm border border-gray-100 dark:border-gray-600">
-                        <div class="text-xs flex-1 pr-2">
-                            <span class="font-bold block">{{ $item['name'] }}</span>
+                        <div class="text-xs flex-1 pr-4">
+                            <span class="font-bold block text-gray-900 dark:text-gray-100">{{ $item['name'] }}</span>
                             <span class="text-[10px] text-gray-400 uppercase tracking-tighter">{{ $item['type'] }}</span>
                         </div>
                         <div class="flex items-center gap-2">
+                            <span class="text-[10px] text-gray-500 font-medium whitespace-nowrap">
+                                {{ $item['quantity'] ?? 0 }}
+                            </span>
                             <x-filament::input.wrapper>
-                                <x-filament::input type="number" step="0.01" 
+                                <x-filament::input type="number" step="1" 
                                     wire:model.live.debounce.300ms="items.{{ $index }}.quantity" 
-                                    class="w-20 text-right text-xs font-mono" 
+                                    class="w-16 text-right text-xs font-mono" 
                                 />
                             </x-filament::input.wrapper>
                             <x-filament::icon-button 
@@ -88,7 +94,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="flex flex-col items-center justify-center py-10 text-gray-400">
+                    <div class="flex-1 flex flex-col items-center justify-center text-gray-400">
                         <x-heroicon-o-document-plus class="w-10 h-10 mb-2 opacity-20"/>
                         <p class="text-xs italic">Корзина пуста</p>
                     </div>

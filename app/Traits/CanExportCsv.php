@@ -13,9 +13,9 @@ trait CanExportCsv
             fputs($handle, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
             $items = collect($data);
             if ($items->isNotEmpty()) {
-                fputcsv($handle, array_keys((array)$items->first()), ';');
+                fputcsv($handle, array_keys((array)$items->first()), ';', '"', '\\');
                 foreach ($items as $row) {
-                    fputcsv($handle, (array)$row, ';');
+                    fputcsv($handle, (array)$row, ';', '"', '\\');
                 }
             }
             fclose($handle);

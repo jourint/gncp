@@ -19,15 +19,19 @@ class ShoeSoleItemForm
                     ->schema([
                         Select::make('shoe_sole_id')
                             ->label('Модель подошвы')
-                            ->relationship('shoeSole', 'name')
-                            ->getOptionLabelFromRecordUsing(fn(ShoeSole $record) => "{$record->name} (Цвет: {$record->color?->name})")
+                            ->relationship(
+                                name: 'shoeSole',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn($query) => $query->with('color')
+                            )
+                            ->getOptionLabelFromRecordUsing(fn(ShoeSole $record) => $record->fullName)
                             ->searchable()
                             ->preload()
                             ->required(),
 
                         Select::make('size_id')
                             ->label('Размер')
-                            ->options(Size::all()->pluck('name', 'id'))
+                            ->options(fn() => Size::pluck('name', 'id'))
                             ->required()
                             ->searchable(),
 

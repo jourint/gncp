@@ -63,11 +63,12 @@ class MaterialsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->with(['material.color', 'material.materialType.unit']))
             ->recordTitleAttribute('material.name')
             ->columns([
                 TextColumn::make('material.name')
                     ->label('Материал')
-                    ->formatStateUsing(fn($record) => $record->material->full_name),
+                    ->formatStateUsing(fn($record) => $record->material->fullName),
 
                 TextColumn::make('quantity')
                     ->label('Расход')

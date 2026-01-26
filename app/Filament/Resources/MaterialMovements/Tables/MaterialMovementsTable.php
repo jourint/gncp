@@ -16,6 +16,16 @@ class MaterialMovementsTable
     public static function configure(Table $table): Table
     {
         return $table
+            // Умная подгрузка для разных типов моделей
+            ->modifyQueryUsing(fn($query) => $query->with([
+                'user', // Чтобы не дергать оператора
+                'movable' => function ($morphTo) {
+                    $morphTo->morphWith([
+                        Material::class => ['color'],
+                        ShoeSoleItem::class => ['shoeSole.color', 'size'],
+                    ]);
+                },
+            ]))
             ->columns([
                 TextColumn::make('created_at')
                     ->label('Дата')

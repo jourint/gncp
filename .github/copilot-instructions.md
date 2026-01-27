@@ -4,9 +4,9 @@
 
 ## Project Overview
 
-This is a Laravel 12 ERP system for shoe manufacturing with order management, material inventory tracking, and cost calculations. The system uses **Filament v4** as the primary admin interface and **Livewire/Volt** for real-time components.
+This is a Laravel 12 ERP system for shoe manufacturing with order management, material inventory tracking, and cost calculations. The system uses **Filament v5** as the primary admin interface and **Livewire/Volt** for real-time components.
 
-**Stack**: Laravel 12, Filament 4, Livewire/Volt, TailwindCSS 4, Vite, PostgreSQL
+**Stack**: Laravel 12, Filament 5, Livewire/Volt, TailwindCSS 4, Vite, PostgreSQL
 
 ---
 

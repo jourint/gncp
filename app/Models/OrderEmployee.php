@@ -33,6 +33,17 @@ class OrderEmployee extends Model
                 throw new \Exception('Оплаченную запись нельзя изменять.');
             }
         });
+
+        // Новая логика для синхронизации статуса заказа
+        $sync = function ($item) {
+            // Проверяем, что цепочка связей существует, чтобы не поймать ошибку на null
+            $item->loadMissing('orderPosition.order');
+            $item->orderPosition?->order?->syncStatus();
+        };
+
+        static::created($sync); // Когда назначили мастера
+        static::updated($sync); // Если переназначили
+        static::deleted($sync); // Если удалили назначение
     }
 
     public function order(): BelongsTo

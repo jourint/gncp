@@ -25,6 +25,26 @@ class Order extends Model
         ];
     }
 
+    public function syncStatus(): void
+    {
+        // Если заказ уже завершен или отменен, автоматика не вмешивается
+        if (in_array($this->status, [OrderStatus::Completed, OrderStatus::Cancelled])) {
+            return;
+        }
+
+        // Если уже в процессе, и мы только добавляем сотрудников, то нет смысла перепроверять существование — оно и так true.
+        if ($this->status === OrderStatus::Processing) {
+            return;
+        }
+
+        // Проверяем наличие записей в OrderEmployee через связи
+        $hasAssignments = $this->positions()->whereHas('orderEmployees')->exists();
+        $newStatus = $hasAssignments ? OrderStatus::Processing : OrderStatus::Pending;
+        if ($this->status !== $newStatus) {
+            $this->update(['status' => $newStatus]);
+        }
+    }
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);

@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Services\Reports\ReportService;
 use App\Traits\CanExportCsv;
+use App\Traits\CanExportPdf;
 
 use App\Models\JobPosition;
 use App\Filament\Pages\Reports\ReportContract;
@@ -20,6 +21,8 @@ use BackedEnum;
 class AdvancedReports extends Page
 {
     use CanExportCsv;
+    use CanExportPdf;
+
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedComputerDesktop;
     protected string $view = 'filament.pages.advanced-reports';
@@ -53,15 +56,10 @@ class AdvancedReports extends Page
     {
         if (!$this->active_report) return null;
 
-        $pdf = Pdf::loadView('filament.pages.reports.pdf-export', [
-            'active_report' => $this->active_report,
-            'selected_date' => $this->selected_date,
-            'data'          => $this->report_data
-        ])->setPaper('a4', 'portrait');
-
-        return response()->streamDownload(
-            fn() => print($pdf->output()),
-            "report-{$this->active_report}-{$this->selected_date}.pdf"
+        return $this->streamReportPdf(
+            $this->active_report,
+            $this->selected_date,
+            $this->report_data
         );
     }
 

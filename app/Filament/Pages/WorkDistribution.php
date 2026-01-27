@@ -12,6 +12,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use BackedEnum;
+use App\Filament\Pages\WorkDistribution\DistributeManager;
 
 class WorkDistribution extends Page
 {
@@ -157,6 +158,34 @@ class WorkDistribution extends Page
     }
 
     /**
+     * Метод для частичного уменьшения выданной работы
+     */
+    public function reduceAssignment(int $assignmentId, int $quantity): void
+    {
+        $assignment = OrderEmployee::find($assignmentId);
+
+        if (!$assignment) {
+            Notification::make()->title('Ошибка')->body('Назначение не найдено.')->danger()->send();
+            return;
+        }
+
+        if ($quantity <= 0) {
+            Notification::make()->title('Ошибка')->body('Количество для списания должно быть больше нуля.')->danger()->send();
+            return;
+        }
+
+        if ($quantity >= $assignment->quantity) {
+            // Если списываем всё или больше, то просто удаляем
+            $this->removeAssignment($assignmentId);
+        } else {
+            // Уменьшаем количество
+            $assignment->quantity -= $quantity;
+            $assignment->save();
+            Notification::make()->title('Количество уменьшено')->info()->send();
+        }
+    }
+
+    /**
      * Сводная загрузка всего цеха
      */
     public function getShopFloorLoadProperty(): Collection
@@ -210,10 +239,31 @@ class WorkDistribution extends Page
     }
 
     /**
-     * Общее количество пар, запланированных на день в этом цеху
+     * Удалить все назначения выбранного сотрудника на текущую дату
      */
+    public function clearEmployeeWork(): void
+    {
+        if (!$this->selected_employee_id || !$this->selected_date) {
+            Notification::make()->title('Ошибка')->body('Сотрудник не выбран')->danger()->send();
+            return;
+        }
+
+        $count = OrderEmployee::query()
+            ->where('employee_id', $this->selected_employee_id)
+            ->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
+            ->delete();
+
+        if ($count > 0) {
+            Notification::make()
+                ->title('Список очищен')
+                ->body("Удалено позиций: $count")
+                ->success()
+                ->send();
+        }
+    }
+
     /**
-     * Общее количество пар, запланированных на день
+     * Общее количество пар, запланированных на день в этом цеху
      */
     public function getTotalDayWorkProperty(): int
     {
@@ -225,120 +275,40 @@ class WorkDistribution extends Page
             ->sum('quantity');
     }
 
-    /**
-     * Вспомогательный метод для записи в базу
-     */
-    private function assignWorkToEmployee($pos, $employeeId, $qty): void
+    public function autoDistribute(string $method): void
     {
-        $assignment = OrderEmployee::firstOrNew([
-            'order_id' => $pos->order_id,
-            'order_position_id' => $pos->id,
-            'employee_id' => $employeeId,
-        ]);
-
-        $assignment->quantity = ($assignment->exists ? $assignment->quantity : 0) + $qty;
-        $assignment->price_per_pair = $pos->price;
-        $assignment->is_paid = false;
-        $assignment->save();
-    }
-
-    public function autoDistribute2(): void
-    {
+        // 1. Проверка на наличие данных (базовая защита)
         $pending = $this->getPendingWorkProperty();
         $employees = $this->getEmployeesProperty();
 
         if ($pending->isEmpty() || $employees->isEmpty()) {
-            Notification::make()->title('Нечего распределять')->warning()->send();
+            Notification::make()
+                ->title('Ошибка')
+                ->body('Нет свободных позиций или сотрудников для распределения')
+                ->danger()
+                ->send();
             return;
         }
 
-        // 1. Создаем временный массив для отслеживания нагрузки в памяти
-        // Чтобы не делать тяжелые запросы в базу на каждой итерации
-        $loads = [];
-        foreach ($employees as $emp) {
-            // Считаем, сколько уже было выдано сотруднику ДО нажатия кнопки
-            $alreadyAssigned = OrderEmployee::where('employee_id', $emp->id)
-                ->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
-                ->sum('quantity');
+        // 2. Запуск стратегии через менеджер
+        try {
+            DistributeManager::make($method)->distribute(
+                $pending,
+                $employees,
+                $this->selected_date
+            );
 
-            $loads[$emp->id] = (int)$alreadyAssigned;
+            Notification::make()
+                ->title('Успешно')
+                ->body('Работа распределена выбранным методом')
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Ошибка алгоритма')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
         }
-
-        foreach ($pending as $pos) {
-            if ($pos->price <= 0) continue;
-
-            $remaining = (int)$pos->remaining;
-            if ($remaining <= 0) continue;
-
-            $empCount = $employees->count();
-            $base = floor($remaining / $empCount);
-            $extra = $remaining % $empCount;
-
-            // 2. Раздаем всем базовую часть
-            foreach ($employees as $emp) {
-                if ($base > 0) {
-                    $this->assignWorkToEmployee($pos, $emp->id, (int)$base);
-                    $loads[$emp->id] += $base;
-                }
-            }
-
-            // 3. Раздаем остаток (extra) самым "голодным"
-            if ($extra > 0) {
-                for ($i = 0; $i < $extra; $i++) {
-                    // Сортируем массив нагрузок и берем ID того, у кого меньше всего пар
-                    asort($loads);
-                    $lessLoadedEmployeeId = key($loads);
-
-                    $this->assignWorkToEmployee($pos, $lessLoadedEmployeeId, 1);
-                    $loads[$lessLoadedEmployeeId] += 1;
-                }
-            }
-        }
-
-        Notification::make()->title('Распределено с ювелирной точностью')->success()->send();
-    }
-
-    public function autoDistribute(): void
-    {
-        $pending = $this->getPendingWorkProperty();
-        $employees = $this->getEmployeesProperty();
-
-        if ($pending->isEmpty() || $employees->isEmpty()) {
-            Notification::make()->title('Нечего распределять')->warning()->send();
-            return;
-        }
-
-        // Лимит одной пачки в одни руки (можешь вынести в настройки)
-        $maxBatchSize = 10;
-
-        // Собираем текущую нагрузку в памяти
-        $loads = [];
-        foreach ($employees as $emp) {
-            $loads[$emp->id] = (int) OrderEmployee::where('employee_id', $emp->id)
-                ->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
-                ->sum('quantity');
-        }
-
-        foreach ($pending as $pos) {
-            $remaining = (int)$pos->remaining;
-
-            while ($remaining > 0) {
-                // Определяем размер текущей порции
-                $qtyToAssign = min($remaining, $maxBatchSize);
-
-                // Находим самого свободного сотрудника
-                asort($loads);
-                $leastLoadedId = key($loads);
-
-                // Назначаем работу
-                $this->assignWorkToEmployee($pos, $leastLoadedId, $qtyToAssign);
-
-                // Обновляем счетчики
-                $loads[$leastLoadedId] += $qtyToAssign;
-                $remaining -= $qtyToAssign;
-            }
-        }
-
-        Notification::make()->title('Работа распределена пачками')->success()->send();
     }
 }

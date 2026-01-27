@@ -206,9 +206,9 @@ class WarehouseManagerConsole extends Page
         DB::transaction(function () {
             foreach ($this->items as $item) {
                 if ($item['quantity'] <= 0) continue;
-
+                $morphType = $item['type'] === 'materials' ? 'material' : 'sole';
                 MaterialMovement::create([
-                    'movable_type' => $item['type'] === 'materials' ? Material::class : ShoeSoleItem::class,
+                    'movable_type' => $morphType,
                     'movable_id' => $item['entity_id'],
                     'type' => $this->movementType,
                     'quantity' => $item['quantity'],

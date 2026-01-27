@@ -27,41 +27,25 @@
 
             <x-filament::dropdown>
                 <x-slot name="trigger">
-                    <x-filament::button 
-                        color="warning"
-                        icon="heroicon-m-sparkles"
-                        class="w-full"
-                    >
-                        Распределить остатки
+                    <x-filament::button icon="heroicon-m-bolt" color="warning">
+                        Распределить заказы на цех
                     </x-filament::button>
                 </x-slot>
 
                 <x-filament::dropdown.list>
-                    <x-filament::dropdown.list.item 
-                        wire:click="autoDistribute"
-                        wire:confirm="Это действие автоматически распределит все ОСТАВШИЕСЯ пары поровну между всеми активными сотрудниками цеха. Продолжить?"
-                        icon="heroicon-m-sparkles"
-                    >
-                        1: Поровну между всеми
-                    </x-filament::dropdown.list.item>
-
-                    <x-filament::dropdown.list.item 
-                        wire:confirm="Это действие автоматически распределит все ОСТАВШИЕСЯ пары поровну между всеми активными сотрудниками цеха. Продолжить?"
-                        icon="heroicon-m-sparkles"
-                        disabled
-                    >
-                        2: В разработке...
-                    </x-filament::dropdown.list.item>
-
-                    <x-filament::dropdown.list.item 
-                        wire:confirm="Это действие автоматически распределит все ОСТАВШИЕСЯ пары поровну между всеми активными сотрудниками цеха. Продолжить?"
-                        icon="heroicon-m-sparkles"
-                        disabled
-                    >
-                        3: В разработке...
-                    </x-filament::dropdown.list.item>
+                    @foreach(\App\Filament\Pages\WorkDistribution\DistributeManager::getList() as $key => $algo)
+                        <x-filament::dropdown.list.item 
+                            wire:click="autoDistribute('{{ $key }}')"
+                            wire:confirm="{{ $algo['label'] }}: {{ $algo['confirm'] }}"
+                            icon="{{ $algo['icon'] }}"
+                        >
+                            {{ $algo['label'] }}
+                        </x-filament::dropdown.list.item>
+                    @endforeach
                 </x-filament::dropdown.list>
             </x-filament::dropdown>
+
+
         </div>
     </x-filament::section>
 
@@ -131,6 +115,20 @@
         <x-filament::section icon="heroicon-m-user">
             <x-slot name="heading">
                 Выдано: {{ \App\Models\Employee::find($selected_employee_id)?->name ?? '---' }}
+                @if($selected_employee_id && $this->assignedWork->isNotEmpty())
+                    <span class="ml-4 inline-block"> {{-- Обертка для отступа и выравнивания --}}
+                        <x-filament::button 
+                            color="danger" 
+                            size="xs"
+                            icon="heroicon-m-trash"
+                            wire:click="clearEmployeeWork"
+                            wire:confirm="Вы уверены, что хотите удалить ВСЕ назначения этого сотрудника за сегодня?"
+                            class="font-bold uppercase text-[9px] shadow-sm tracking-tighter"
+                        >
+                            Очистить всё
+                        </x-filament::button>
+                    </span>
+                @endif
             </x-slot>
 
             <div class="overflow-x-auto">
@@ -140,7 +138,7 @@
                             <th class="py-2 px-1">Модель/ТК</th>
                             <th class="py-2 px-1 text-center">Разм.</th>
                             <th class="py-2 px-1 text-center">Кол-во</th>
-                            <th class="py-2 px-1 text-right text-danger-600">X</th>
+                            <th class="py-2 px-1 text-right">Вернуть</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50 dark:divide-white/5">
@@ -152,9 +150,31 @@
                                 <td class="py-3 px-1 text-center font-black">{{ $work->orderPosition->size->name }}</td>
                                 <td class="py-3 px-1 text-center font-black text-success-600">{{ $work->quantity }}</td>
                                 <td class="py-3 px-1 text-right">
-                                    <button wire:click="removeAssignment({{ $work->id }})" class="text-gray-300 hover:text-danger-600">
-                                        <x-heroicon-m-trash class="w-4 h-4"/>
-                                    </button>
+                                    <div class="flex items-center gap-1 justify-end" x-data="{ amount: {{ $work->quantity }} }">
+                                        <input 
+                                            type="number" 
+                                            x-model="amount" 
+                                            class="w-14 p-1 text-xs border-gray-300 rounded-lg dark:bg-gray-800 dark:border-white/10" 
+                                            min="1" 
+                                            max="{{ $work->quantity }}"
+                                        >
+                                        <x-filament::button 
+                                            size="xs"
+                                            color="warning"
+                                            wire:loading.attr="disabled"
+                                            x-on:click="$wire.reduceAssignment({{ $work->id }}, amount)"
+                                            wire:confirm="Вы уверены, что хотите списать указанное количество?"
+                                        >
+                                            OK
+                                        </x-filament::button>
+                                        <button 
+                                            wire:click="removeAssignment({{ $work->id }})"
+                                            wire:confirm="Вы уверены, что хотите удалить ВСЮ позицию?"
+                                            class="text-gray-300 hover:text-danger-600 p-1"
+                                        >
+                                            <x-heroicon-m-trash class="w-4 h-4"/>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

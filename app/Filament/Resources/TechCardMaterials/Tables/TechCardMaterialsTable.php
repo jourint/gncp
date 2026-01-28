@@ -28,13 +28,8 @@ class TechCardMaterialsTable
                     ->label('Расход')
                     ->alignCenter()
                     ->formatStateUsing(function ($state, $record) {
-                        // Отладочный хак: если всё равно 'ед.', расскоментируй строку ниже, 
-                        // чтобы увидеть, где именно пусто в логах или на экране
-                        // dd($record->material?->materialType?->unit); 
-
-                        $unitName = $record->material?->materialType?->unit?->name;
-
-                        return $state . ' ' . ($unitName ?? 'ед.');
+                        $unitName = $record->material?->materialType?->unit_id?->getLabel() ?? 'ед.';
+                        return $state . ' ' . $unitName;
                     }),
 
                 TextColumn::make('created_at')

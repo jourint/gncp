@@ -64,15 +64,8 @@ class OrdersRelationManager extends RelationManager
                     ->sortable(),
 
                 TextColumn::make('status')
-                    ->badge()
                     ->label('Статус')
-                    ->color(fn(OrderStatus|string $state): string => match ($state instanceof OrderStatus ? $state->value : $state) {
-                        OrderStatus::Pending->value => 'gray',
-                        OrderStatus::Processing->value => 'warning',
-                        OrderStatus::Completed->value => 'success',
-                        OrderStatus::Cancelled->value => 'danger',
-                        default => 'gray',
-                    }),
+                    ->badge(),
 
                 TextColumn::make('comment')
                     ->limit(50)

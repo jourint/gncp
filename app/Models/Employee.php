@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\JobPosition;
 
 class Employee extends Model
 {
@@ -15,17 +16,10 @@ class Employee extends Model
         return [
             'name' => 'string',
             'phone' => 'string',
-            'job_position_id' => 'integer',
+            'job_position_id' => JobPosition::class,
             'is_active' => 'boolean',
             'skill_level' => 'decimal:2',
         ];
-    }
-
-    public function jobPosition(): BelongsTo
-    {
-        return $this->belongsTo(JobPosition::class)->withDefault([
-            'name' => 'Должность не назначена',
-        ]);
     }
 
     public function orderEmployees(): HasMany
@@ -35,6 +29,12 @@ class Employee extends Model
 
     public function getFullNameAttribute()
     {
-        return "{$this->name} ({$this->jobPosition?->value})";
+        return "{$this->name} ({$this->getJobPositionLabel()})";
+    }
+
+    public function getJobPositionLabel(): string
+    {
+        // Если в базе NULL или что-то не то, вернем дефолт
+        return $this->job_position_id?->getLabel() ?? 'Должность не назначена';
     }
 }

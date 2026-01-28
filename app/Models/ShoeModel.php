@@ -38,7 +38,7 @@ class ShoeModel extends Model
         return $this->belongsTo(ShoeType::class);
     }
 
-    public function techCards(): HasMany
+    public function shoeTechCards(): HasMany
     {
         return $this->hasMany(ShoeTechCard::class);
     }

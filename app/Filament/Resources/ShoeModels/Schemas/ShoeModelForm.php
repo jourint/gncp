@@ -5,12 +5,9 @@ namespace App\Filament\Resources\ShoeModels\Schemas;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\Repeater;
 use Filament\Schemas\Schema;
 use App\Models\Workflow;
-use Filament\Forms\Components\TagsInput;
 use Filament\Schemas\Components\Grid;
 use App\Models\Size;
 

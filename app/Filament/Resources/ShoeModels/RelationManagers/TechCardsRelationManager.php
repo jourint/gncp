@@ -2,15 +2,11 @@
 
 namespace App\Filament\Resources\ShoeModels\RelationManagers;
 
-use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -27,7 +23,7 @@ use App\Models\ShoeTechCard;
 
 class TechCardsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'techCards';
+    protected static string $relationship = 'shoeTechCards';
     protected static ?string $title = 'Тех-карты модели';
 
     public function form(Schema $schema): Schema
@@ -46,7 +42,6 @@ class TechCardsRelationManager extends RelationManager
                     ->relationship(
                         name: 'shoeSole',
                         titleAttribute: 'name',
-                        // РЕШЕНИЕ: Подгружаем цвет подошвы для генерации меток (Labels) в выпадающем списке
                         modifyQueryUsing: fn($query) => $query->with('color')
                     )
                     ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
@@ -59,7 +54,6 @@ class TechCardsRelationManager extends RelationManager
                     ->relationship(
                         name: 'material',
                         titleAttribute: 'name',
-                        // Подгружаем цвет материала для его fullName
                         modifyQueryUsing: fn($query) => $query->with('color')
                     )
                     ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
@@ -71,7 +65,6 @@ class TechCardsRelationManager extends RelationManager
                     ->relationship(
                         name: 'materialTwo',
                         titleAttribute: 'name',
-                        // Подгружаем цвет материала для его fullName
                         modifyQueryUsing: fn($query) => $query->with('color')
                     )
                     ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)

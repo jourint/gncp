@@ -20,7 +20,7 @@ class ShoeType extends Model
         ];
     }
 
-    public function models(): HasMany
+    public function shoeModels(): HasMany
     {
         return $this->hasMany(ShoeModel::class, 'shoe_type_id');
     }

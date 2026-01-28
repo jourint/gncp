@@ -28,7 +28,7 @@ return new class extends Migration
             $table->jsonb('available_sizes')->nullable(); // e.g. [36, 37, 38, 39, 40, 41, 42]
             $table->jsonb('workflows')->nullable(); // Дополнительные рабочие процессы для модели
 
-            $table->boolean('is_active')->default(true);    // Активен ли модель
+            $table->boolean('is_active')->default(true)->index();    // Активен ли модель
 
             $table->timestamps();
 

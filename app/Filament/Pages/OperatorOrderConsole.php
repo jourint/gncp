@@ -2,8 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Customer;
-use App\Models\ShoeModel;
 use App\Models\ShoeTechCard;
 use App\Models\Size;
 use App\Models\MaterialLining;

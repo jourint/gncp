@@ -23,8 +23,10 @@
                 <x-filament::input.wrapper>
                     <x-filament::input.select wire:model.live="selected_job_position" class="border-none">
                         <option value="">Все цеха (выбор)</option>
-                        @foreach(\App\Models\JobPosition::all() as $pos)
-                            <option value="{{ $pos->id }}">{{ $pos->value }}</option>
+                        @foreach(\App\Enums\JobPosition::cases() as $pos)
+                            @if($pos !== \App\Enums\JobPosition::None) {{-- Пропускаем вариант "Не выбрано", если есть общий option --}}
+                                <option value="{{ $pos->value }}">{{ $pos->getLabel() }}</option>
+                            @endif
                         @endforeach
                     </x-filament::input.select>
                 </x-filament::input.wrapper>

@@ -9,7 +9,6 @@ use App\Models\Size;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use BackedEnum;
 use App\Filament\Pages\WorkDistribution\DistributeManager;

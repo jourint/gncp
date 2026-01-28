@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name', 50)->unique();   // Название типа материала
             $table->unsignedSmallInteger('unit_id')->nullable()->index();  // Единица измерения Sushi
             $table->string('description', 255)->nullable();    // Описание типа материала
-            $table->boolean('is_active')->default(true);    // Активен ли тип материала
+            $table->boolean('is_active')->default(true)->index();    // Активен ли тип материала
         });
     }
 

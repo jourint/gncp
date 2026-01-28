@@ -22,21 +22,27 @@ class TechCardMaterialForm
 
                 Select::make('material_id')
                     ->label('Материал')
-                    ->relationship('material', 'name')
+                    ->relationship(
+                        name: 'material',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn($query) => $query->with(['color', 'materialType'])
+                    )
+                    ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
                     ->required()
-                    ->searchable()
-                    ->preload(),
+                    ->searchable(['name'])
+                    ->preload()
+                    ->live(),
 
                 TextInput::make('quantity')
                     ->label('Расход на 1 пару')
                     ->numeric()
-                    ->step(0.1)
+                    ->step(0.5)
                     ->default(0.00)
                     ->suffix(function (callable $get) {
                         $materialId = $get('material_id');
                         if (!$materialId) return '';
-                        $material = Material::with('materialType.unit')->find($materialId);
-                        return $material?->materialType?->unit?->name ?? 'ед.';
+                        $material = Material::with('materialType')->find($materialId);
+                        return $material?->materialType?->unit_id?->getLabel() ?? 'ед.';
                     })
                     ->required(),
             ]);

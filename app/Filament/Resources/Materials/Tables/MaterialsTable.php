@@ -9,7 +9,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Table;
-use App\Models\Unit;
 
 class MaterialsTable
 {
@@ -37,10 +36,7 @@ class MaterialsTable
                     ->numeric(2)
                     ->sortable()
                     ->color(fn($state) => $state <= 0 ? 'danger' : 'success')
-                    ->description(
-                        fn($record) =>
-                        Unit::find($record->materialType?->unit_id)?->name ?? ''
-                    ),
+                    ->suffix(fn($record) => ' ' . ($record->materialType?->unit_id?->getLabel() ?? '')),
 
                 IconColumn::make('is_active')
                     ->label('Статус')

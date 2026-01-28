@@ -9,9 +9,6 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use App\Models\ShoeModel;
-use App\Models\ShoeSole;
-use App\Models\ShoeInsole;
 
 class ShoeTechCardForm
 {

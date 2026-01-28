@@ -20,6 +20,10 @@ return new class extends Migration
             $table->decimal('price_per_pair', 8, 2)->default(0.00); // Цена за пару из тип + коэф модели при формировании
             $table->boolean('is_paid')->default(false); // Оплачено ли сотруднику за эту работу
             $table->timestamps();
+
+            //
+            $table->index('employee_id');
+            $table->index(['employee_id', 'is_paid']);
             $table->unique(['order_id', 'order_position_id', 'employee_id'], 'order_employee_unique');
         });
     }

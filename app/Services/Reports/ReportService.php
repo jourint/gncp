@@ -2,7 +2,7 @@
 
 namespace App\Services\Reports;
 
-use App\Models\JobPosition;
+use App\Enums\JobPosition;
 use App\Filament\Pages\Reports\{
     ProductionReport,
     MiscellaneousReport,
@@ -21,8 +21,8 @@ class ReportService
     {
         return match ($type) {
             'cutting'            => new ProductionReport(),
-            'sewing'             => new ProductionReport(JobPosition::SEWING),
-            'shoemaker'          => new ProductionReport(JobPosition::SHOEMAKER),
+            'sewing'             => new ProductionReport(JobPosition::Sewing->value),
+            'shoemaker'          => new ProductionReport(JobPosition::Shoemaker->value),
             'miscellaneous'      => new MiscellaneousReport(),
             'expedition'         => new ExpeditionReport(),
             'stock_requirements' => new StockRequirementsReport(),

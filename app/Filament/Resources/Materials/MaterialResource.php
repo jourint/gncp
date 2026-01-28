@@ -21,8 +21,8 @@ class MaterialResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCircleStack;
 
-    protected static string |UnitEnum|null $navigationGroup = 'Справочники';
-    protected static ?int $navigationSort = 7;
+    protected static string |UnitEnum|null $navigationGroup = 'Склад';
+    protected static ?int $navigationSort = 2;
     protected static ?string $label = 'Материал';
     protected static ?string $pluralLabel = 'Материалы';
     protected static ?string $navigationLabel = 'Материалы';

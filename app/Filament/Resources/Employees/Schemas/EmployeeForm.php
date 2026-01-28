@@ -6,7 +6,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
-use App\Models\JobPosition;
+use App\Enums\JobPosition;
 
 class EmployeeForm
 {
@@ -21,7 +21,7 @@ class EmployeeForm
 
                 Select::make('job_position_id')
                     ->label('Цех / Должность')
-                    ->options(JobPosition::all()->pluck('value', 'id'))
+                    ->options(JobPosition::class)
                     ->default(0)
                     ->selectablePlaceholder(false)
                     ->required(),

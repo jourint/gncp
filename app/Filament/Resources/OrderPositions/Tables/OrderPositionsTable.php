@@ -15,9 +15,15 @@ class OrderPositionsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('updated_at', 'desc')
             ->columns([
                 TextColumn::make('order.fullName')
                     ->label('Заказ №')
+                    ->sortable(),
+
+                TextColumn::make('order.status')
+                    ->label('Статус заказа')
+                    ->badge()
                     ->sortable(),
 
                 TextColumn::make('shoeTechCard.name')

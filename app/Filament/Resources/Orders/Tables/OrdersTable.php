@@ -7,7 +7,6 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use App\Enums\OrderStatus;
 use App\Traits\HasCustomTableSearch;
 
 class OrdersTable
@@ -18,7 +17,7 @@ class OrdersTable
     {
         return $table
             ->modifyQueryUsing(fn($query) => $query->with(['customer']))
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort('started_at', 'desc')
             ->columns([
                 TextColumn::make('fullName')
                     ->label('Клиент')
@@ -34,13 +33,7 @@ class OrdersTable
                 TextColumn::make('status')
                     ->label('Статус')
                     ->badge()
-                    ->sortable()
-                    ->color(fn(OrderStatus $state): string => match ($state) {
-                        OrderStatus::Pending => 'gray',
-                        OrderStatus::Processing => 'warning',
-                        OrderStatus::Completed => 'success',
-                        OrderStatus::Cancelled => 'danger',
-                    }),
+                    ->sortable(),
 
                 TextColumn::make('comment')
                     ->label('Комментарий')

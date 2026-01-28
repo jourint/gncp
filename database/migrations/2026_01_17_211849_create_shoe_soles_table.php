@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name', 50)->index(); // Код подошвы
             $table->foreignId('color_id')->constrained('colors')->restrictOnDelete();   // Цвет подошвы
-            $table->boolean('is_active')->default(true);    // Активен ли подошва
+            $table->boolean('is_active')->default(true)->index();    // Активен ли подошва
             $table->timestamps();
+
             $table->unique(['name', 'color_id'], 'unique_shoe_sole');
         });
     }

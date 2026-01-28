@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 100)->index();       // Имя
             $table->string('phone', 20)->unique();  // Телефон
-            $table->boolean('is_active')->default(true);    // Активен ли клиент
+            $table->boolean('is_active')->default(true)->index();    // Активен ли клиент
             $table->timestamps();
         });
     }

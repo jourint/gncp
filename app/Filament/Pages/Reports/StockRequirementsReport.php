@@ -4,62 +4,40 @@ namespace App\Filament\Pages\Reports;
 
 use App\Models\OrderPosition;
 use App\Models\Material;
-use Faker\Provider\Base;
+use App\Enums\Unit;
 use Illuminate\Support\Collection;
 
 class StockRequirementsReport extends BaseReport
 {
     public function execute(string $date): array
     {
-        // 1. Жадная загрузка (Eager Loading) для исключения N+1 запросов
         $orderPositions = OrderPosition::query()
             ->join('orders', 'order_positions.order_id', '=', 'orders.id')
             ->where('orders.started_at', $date)
             ->select('order_positions.*')
             ->with([
-                'order.customer', // Для детализации
+                'order.customer',
                 'shoeTechCard.techCardMaterials.material.color',
-                'shoeTechCard.techCardMaterials.material.materialType.unit', // Подгружаем Unit (Sushi)
+                'shoeTechCard.techCardMaterials.material.materialType',
                 'shoeTechCard.shoeSole.color'
             ])
             ->get();
 
         $materialsForCutting = collect();
-        $solesNeeded = collect(); // Группировка: sole_id => [sizes => [size_id => qty]]
+        $solesNeeded = collect();
 
         foreach ($orderPositions as $pos) {
-            $q = $pos->quantity;
+            $qty = $pos->quantity;
             $customerName = $pos->order?->customer?->name ?? 'Запас';
 
-            // Агрегация материалов для кроя
-            if ($pos->shoeTechCard?->techCardMaterials) {
-                foreach ($pos->shoeTechCard->techCardMaterials as $tcm) {
-                    $this->aggregate($materialsForCutting, $tcm->material, $q * $tcm->quantity, $customerName);
-                }
-            }
+            // 1. Агрегация материалов для кроя
+            $pos->shoeTechCard?->techCardMaterials?->each(function ($tcm) use ($qty, $customerName, &$materialsForCutting) {
+                $this->aggregate($materialsForCutting, $tcm->material, $qty * $tcm->quantity, $customerName);
+            });
 
-            // Агрегация подошв по размерам
-            $sole = $pos->shoeTechCard?->shoeSole;
-            if ($sole) {
-                $soleName = $sole->fullName;
-                $id = $sole->id;
-                $sizeId = $pos->size_id ?? 0;
-
-                $item = $solesNeeded->get($id, [
-                    'sole_id'        => $id,
-                    'sole_name'      => $soleName,
-                    'sizes'          => [], // Детализация по размерам: [size_id => qty]
-                    'total_needed'   => 0,
-                    'details'        => [] // Детализация по клиентам
-                ]);
-
-                // Добавляем размер и количество
-                $item['sizes'][$sizeId] = ($item['sizes'][$sizeId] ?? 0) + $q;
-
-                $item['total_needed'] += $q;
-                $item['details'][$customerName] = ($item['details'][$customerName] ?? 0) + $q;
-
-                $solesNeeded->put($id, $item);
+            // 2. Агрегация подошв (всегда в штуках)
+            if ($sole = $pos->shoeTechCard?->shoeSole) {
+                $this->aggregateSoles($solesNeeded, $sole, $pos);
             }
         }
 
@@ -69,28 +47,48 @@ class StockRequirementsReport extends BaseReport
         ];
     }
 
-    /**
-     * Универсальный метод агрегации с поддержкой детализации
-     */
     private function aggregate(Collection &$col, ?Material $mat, float $val, string $customerName): void
     {
         if (!$mat) return;
 
         $id = $mat->id;
+        $unit = $mat->materialType?->unit_id; // Это уже объект Unit Enum
+
         $item = $col->get($id, [
             'material_id'   => $id,
             'material_name' => $mat->name . ($mat->color ? " ({$mat->color->name})" : ""),
-            'unit_name'     => $mat->materialType?->unit?->label ?? 'ед.',
+            // Используем метод getLabel() напрямую из Enum
+            'unit_name'     => $unit instanceof Unit ? $unit->getLabel() : 'ед.',
             'total_needed'  => 0,
-            'details'       => [] // Храним детализацию: ['Имя клиента' => кол-во]
+            'details'       => []
         ]);
 
         $item['total_needed'] += $val;
-
-        // Накапливаем детализацию по клиентам
         $item['details'][$customerName] = ($item['details'][$customerName] ?? 0) + $val;
 
         $col->put($id, $item);
+    }
+
+    private function aggregateSoles(Collection &$soles, $sole, $pos): void
+    {
+        $id = $sole->id;
+        $qty = $pos->quantity;
+        $customerName = $pos->order?->customer?->name ?? 'Запас';
+        $sizeId = $pos->size_id ?? 0;
+
+        $item = $soles->get($id, [
+            'sole_id'      => $id,
+            'sole_name'    => $sole->fullName,
+            'sizes'        => [],
+            'total_needed' => 0,
+            'details'      => []
+        ]);
+
+        $item['sizes'][$sizeId] = ($item['sizes'][$sizeId] ?? 0) + $qty;
+        $item['total_needed'] += $qty;
+        $item['details'][$customerName] = ($item['details'][$customerName] ?? 0) + $qty;
+
+        $soles->put($id, $item);
     }
 
     public function toExcel(string $date): Collection

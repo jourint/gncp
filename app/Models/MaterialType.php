@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\Unit;
 
 class MaterialType extends Model
 {
@@ -17,13 +17,8 @@ class MaterialType extends Model
             'name' => 'string',
             'description' => 'string',
             'is_active' => 'boolean',
-            'unit_id' => 'integer',
+            'unit_id' => Unit::class,
         ];
-    }
-
-    public function unit(): BelongsTo
-    {
-        return $this->belongsTo(Unit::class, 'unit_id');
     }
 
     public function materials(): HasMany

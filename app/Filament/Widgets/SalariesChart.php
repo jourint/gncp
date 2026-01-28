@@ -3,10 +3,9 @@
 namespace App\Filament\Widgets;
 
 use App\Models\OrderEmployee;
-use App\Models\JobPosition;
+use App\Enums\JobPosition;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
 
 class SalariesChart extends ChartWidget
 {
@@ -19,8 +18,7 @@ class SalariesChart extends ChartWidget
         $startOfWeek = now()->startOfWeek();
         $endOfWeek = now()->endOfWeek();
 
-        // 1. Получаем данные из БД, группируя по дате И по должности (цеху)
-        // Нам нужно пробросить job_position_id из таблицы сотрудников
+        // 1. Получаем данные из БД
         $rawData = OrderEmployee::query()
             ->join('orders', 'order_employees.order_id', '=', 'orders.id')
             ->join('employees', 'order_employees.employee_id', '=', 'employees.id')
@@ -33,45 +31,37 @@ class SalariesChart extends ChartWidget
             ->groupBy('date_key', 'employees.job_position_id')
             ->get();
 
-        // 2. Подготавливаем структуру для Chart.js
-        $jobPositions = JobPosition::all(); // Наши Sushi-данные
         $labels = [];
         $datasets = [];
 
-        // Генерируем подписи дней
+        // Генерируем подписи дней (Пн, Вт...)
         for ($i = 0; $i < 7; $i++) {
             $labels[] = $startOfWeek->copy()->addDays($i)->translatedFormat('D, d M');
         }
 
-        // Цвета для разных цехов
-        $colors = [
-            1 => ['border' => '#3b82f6', 'bg' => 'rgba(59, 130, 246, 0.5)'], // Закройный
-            2 => ['border' => '#f59e0b', 'bg' => 'rgba(245, 158, 11, 0.5)'], // Швейный
-            3 => ['border' => '#10b981', 'bg' => 'rgba(16, 185, 129, 0.5)'], // Сапожный
-        ];
-
-        // 3. Формируем по датасету на каждый цех (кроме "Не выбрано")
-        foreach ($jobPositions as $position) {
-            if ($position->id === 0) continue;
+        foreach (JobPosition::cases() as $position) {
+            // Пропускаем "Не выбрано"
+            if ($position === JobPosition::None) continue;
 
             $dataForPosition = [];
+            $colorHex = $position->getChartColor();
 
             for ($i = 0; $i < 7; $i++) {
                 $dateString = $startOfWeek->copy()->addDays($i)->format('Y-m-d');
 
-                // Ищем сумму для этого цеха в этот день
+                // Ищем сумму. Важно: сравниваем с $position->value
                 $sum = $rawData->where('date_key', $dateString)
-                    ->where('job_position_id', $position->id)
+                    ->where('job_position_id', $position->value)
                     ->first();
 
                 $dataForPosition[] = $sum ? (float) $sum->total : 0.0;
             }
 
             $datasets[] = [
-                'label' => $position->value,
+                'label' => $position->getLabel(),
                 'data' => $dataForPosition,
-                'backgroundColor' => $colors[$position->id]['bg'] ?? '#ccc',
-                'borderColor' => $colors[$position->id]['border'] ?? '#999',
+                'backgroundColor' => $colorHex . '80', // Добавляем 80 для прозрачности (hex alpha)
+                'borderColor' => $colorHex,
                 'borderWidth' => 1,
             ];
         }
@@ -84,6 +74,6 @@ class SalariesChart extends ChartWidget
 
     protected function getType(): string
     {
-        return 'bar'; // Столбчатый график идеально подходит для сравнения цехов
+        return 'bar';
     }
 }

@@ -1,7 +1,7 @@
 <div class="space-y-1 print:text-black">
     <div class="flex justify-between items-center border-b-2 border-rose-600 pb-1">
         <h2 class="text-xl font-black italic text-rose-700 leading-none">
-            План отгрузки на {{ \Carbon\Carbon::parse($selected_date)->addDays(2)->format('d.m.Y') }} (заказ от {{ $selected_date }})
+            Упаковка: {{ \Carbon\Carbon::parse($selected_date)->addDays(2)->format('d.m.Y') }} (заказ от {{ $selected_date }})
         </h2>
         <div class="text-xl font-black leading-none">
             Итого: {{ declension_pairs((int)collect($data)->where('type', 'overall_total')->first()['total_quantity']) }}

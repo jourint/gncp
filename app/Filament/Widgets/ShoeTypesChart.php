@@ -6,7 +6,6 @@ use App\Models\OrderPosition;
 use App\Models\ShoeType;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
 
 class ShoeTypesChart extends ChartWidget
 {

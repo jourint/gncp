@@ -20,3 +20,16 @@ if (!function_exists('declension_pairs')) {
         return "{$number} {$suffix}";
     }
 }
+
+if (! function_exists('format_phone')) {
+    function format_phone(?string $phone): string
+    {
+        if (!$phone) return '';
+
+        return preg_replace(
+            '/(\d{2})(\d{3})(\d{3})(\d{2})(\d{2})/',
+            '+$1 ($2) $3-$4-$5',
+            $phone
+        );
+    }
+}

@@ -8,6 +8,7 @@ use App\Models\OrderPosition;
 use App\Models\Workflow;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Enums\JobPosition;
 
 class PayrollService
 {
@@ -16,42 +17,41 @@ class PayrollService
      */
     public function getSummary(string $from, string $to, ?int $jobPositionId, string $search = ''): Collection
     {
+        $position = $jobPositionId ? JobPosition::tryFrom($jobPositionId) : null;
+
         return Employee::query()
-            ->with(['jobPosition'])
-            ->when($jobPositionId, fn($q) => $q->where('job_position_id', $jobPositionId))
+            ->when($position, fn($q) => $q->where('job_position_id', $position->value))
             ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
-            ->whereHas(
-                'orderEmployees',
-                fn($q) =>
-                $q->join('orders', 'order_employees.order_id', '=', 'orders.id')
-                    ->whereBetween('orders.started_at', [$from, $to])
-            )
+            // Считаем общее кол-во
+            ->withSum(['orderEmployees as total_qty' => function ($q) use ($from, $to) {
+                $q->whereHas('order', fn($o) => $o->whereBetween('started_at', [$from, $to]));
+            }], 'quantity')
+            // Считаем общую сумму (quantity * price_per_pair)
+            // В Laravel для сложных вычислений в withSum можно использовать DB::raw
+            ->withSum(['orderEmployees as total_sum' => function ($q) use ($from, $to) {
+                $q->whereHas('order', fn($o) => $o->whereBetween('started_at', [$from, $to]))
+                    ->select(DB::raw('SUM(quantity * price_per_pair)'));
+            }], 'id') // 'id' тут формальность, так как raw переопределит select
+            // Считаем долг (где is_paid = false)
+            ->withSum(['orderEmployees as debt_sum' => function ($q) use ($from, $to) {
+                $q->where('is_paid', false)
+                    ->whereHas('order', fn($o) => $o->whereBetween('started_at', [$from, $to]))
+                    ->select(DB::raw('SUM(quantity * price_per_pair)'));
+            }], 'id')
+            // Оставляем только тех, у кого была работа
+            ->has('orderEmployees')
             ->get()
-            ->map(fn(Employee $emp) => $this->calculateStats($emp, $from, $to));
-    }
-
-    private function calculateStats(Employee $emp, string $from, string $to): array
-    {
-        $stats = DB::table('order_employees')
-            ->join('orders', 'order_employees.order_id', '=', 'orders.id')
-            ->where('employee_id', $emp->id)
-            ->whereBetween('orders.started_at', [$from, $to])
-            ->selectRaw("
-                SUM(quantity) as total_qty,
-                SUM(quantity * price_per_pair) as total_sum,
-                SUM(CASE WHEN is_paid = true THEN quantity * price_per_pair ELSE 0 END) as paid_sum,
-                SUM(CASE WHEN is_paid = false THEN quantity * price_per_pair ELSE 0 END) as debt_sum
-            ")->first();
-
-        return [
-            'id'       => $emp->id,
-            'name'     => $emp->name,
-            'position' => $emp->jobPosition?->value ?? '—',
-            'qty'      => (float)($stats->total_qty ?? 0),
-            'total'    => (float)($stats->total_sum ?? 0),
-            'paid'     => (float)($stats->paid_sum ?? 0),
-            'debt'     => (float)($stats->debt_sum ?? 0),
-        ];
+            ->map(function (Employee $emp) {
+                return [
+                    'id'       => $emp->id,
+                    'name'     => $emp->name,
+                    'position' => $emp->job_position_id?->getLabel() ?? '—',
+                    'qty'      => (float)($emp->total_qty ?? 0),
+                    'total'    => (float)($emp->total_sum ?? 0),
+                    'paid'     => (float)(($emp->total_sum ?? 0) - ($emp->debt_sum ?? 0)), // Вычисляем оплаченное
+                    'debt'     => (float)($emp->debt_sum ?? 0),
+                ];
+            });
     }
 
 

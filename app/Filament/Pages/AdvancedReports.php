@@ -5,17 +5,8 @@ namespace App\Filament\Pages;
 use App\Services\Reports\ReportService;
 use App\Traits\CanExportCsv;
 use App\Traits\CanExportPdf;
-
-use App\Models\JobPosition;
-use App\Filament\Pages\Reports\ReportContract;
-use App\Filament\Pages\Reports\ProductionReport;
-use App\Filament\Pages\Reports\MiscellaneousReport;
-use App\Filament\Pages\Reports\ExpeditionReport;
-use App\Filament\Pages\Reports\StockRequirementsReport;
-use App\Filament\Pages\Reports\SalaryReport;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
-use Barryvdh\DomPDF\Facade\Pdf;
 use BackedEnum;
 
 class AdvancedReports extends Page

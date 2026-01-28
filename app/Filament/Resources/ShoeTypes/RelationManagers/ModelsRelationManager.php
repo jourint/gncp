@@ -2,13 +2,10 @@
 
 namespace App\Filament\Resources\ShoeTypes\RelationManagers;
 
-use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -25,7 +22,7 @@ use App\Models\Counter;
 
 class ModelsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'models';
+    protected static string $relationship = 'shoeModels';
     protected static ?string $title = 'Модели обуви';
 
     public function form(Schema $schema): Schema

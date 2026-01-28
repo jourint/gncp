@@ -22,7 +22,7 @@ class ShoeSoleItemResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static string |UnitEnum|null $navigationGroup = 'Склад';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
     protected static ?string $label = 'Подошва';
     protected static ?string $pluralLabel = 'Подошвы';
     protected static ?string $navigationLabel = 'Подошва на складе';

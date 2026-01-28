@@ -5,7 +5,7 @@ namespace App\Filament\Resources\MaterialTypes\Schemas;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Select;
-use App\Models\Unit;
+use App\Enums\Unit;
 use Filament\Schemas\Schema;
 
 class MaterialTypeForm
@@ -22,9 +22,11 @@ class MaterialTypeForm
 
                 Select::make('unit_id')
                     ->label('Единица измерения')
-                    ->options(Unit::all()->pluck('name', 'id'))
+                    ->options(
+                        collect(Unit::cases())->mapWithKeys(fn(Unit $u) => [$u->value => $u->getFullName()])
+                    )
                     ->required()
-                    ->native(false), // Красивый выпадающий список
+                    ->native(false),
 
                 TextInput::make('description')
                     ->label('Описание')

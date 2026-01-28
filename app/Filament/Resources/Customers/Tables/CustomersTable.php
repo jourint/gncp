@@ -25,12 +25,7 @@ class CustomersTable
                     ->searchable()
                     ->icon('heroicon-m-phone')
                     ->color('primary')
-                    // Форматируем вывод: превращаем 380991234567 в читаемый вид
-                    ->formatStateUsing(
-                        fn(string $state): string =>
-                        preg_replace('/(\d{2})(\d{3})(\d{3})(\d{2})(\d{2})/', '+$1 ($2) $3-$4-$5', $state)
-                    )
-                    // Делаем номер кликабельным для звонка
+                    ->formatStateUsing(fn($state) => format_phone($state))
                     ->url(fn($record) => "tel:{$record->phone}"),
 
                 IconColumn::make('is_active')

@@ -19,6 +19,8 @@ return new class extends Migration
             $table->unsignedSmallInteger('size_id')->default(36)->index();    // Размер пары Sushi
             $table->unsignedMediumInteger('quantity')->default(1); // количество пар
             $table->timestamps();
+
+            $table->unique(['order_id', 'shoe_tech_card_id', 'material_lining_id', 'size_id'], 'unique_order_position');
         });
     }
 

@@ -45,14 +45,11 @@ class ReplicateMaterialToNextColorAction extends Action
                     $duplicatedMaterial = DB::transaction(function () use ($record, $nextColor) {
                         $duplicated = $record->replicate();
                         $duplicated->color_id = $nextColor->id;
-
-                        // Если в названии встречается старый цвет, заменяем на новый
                         $oldColorName = $record->color?->name;
                         if ($oldColorName && str_contains($record->name, $oldColorName)) {
                             $duplicated->name = str_replace($oldColorName, $nextColor->name, $record->name);
                         } else {
-                            // Или можно сгенерировать новое имя
-                            $duplicated->name = $record->name; // или добавить суффикс
+                            $duplicated->name = $record->name;
                         }
 
                         $duplicated->save();

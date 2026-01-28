@@ -20,7 +20,7 @@ class CreateAllSizesForShoeSoleAction extends Action
             ->requiresConfirmation()
             ->modalHeading('Создание всех размеров')
             ->modalDescription('Будут созданы все возможные размеры для этой подошвы, если они еще не существуют.')
-            ->action(function (ShoeSole $record) { // ← теперь принимаем ShoeSole
+            ->action(function (ShoeSole $record) {
                 // 1. Получаем все размеры из Sushi
                 $allSizes = Size::all();
 

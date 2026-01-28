@@ -7,7 +7,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 use App\Models\MaterialType;
-use App\Models\Unit;
 
 class MaterialForm
 {
@@ -24,6 +23,7 @@ class MaterialForm
                 Select::make('material_type_id')
                     ->label('Тип материала')
                     ->relationship('materialType', 'name')
+                    ->live()
                     ->searchable()
                     ->preload()
                     ->required(),
@@ -40,10 +40,12 @@ class MaterialForm
                     ->numeric()
                     ->default(0.00)
                     ->step(1)
-                    ->suffix(
-                        // Динамически подтягиваем единицу измерения из типа материала
-                        fn($get) => MaterialType::find($get('material_type_id'))?->unit_id ? Unit::find(MaterialType::find($get('material_type_id'))->unit_id)?->name : ''
-                    ),
+                    ->suffix(function ($get) {
+                        $typeId = $get('material_type_id');
+                        if (! $typeId) return '';
+                        $materialType = MaterialType::find($typeId);
+                        return $materialType?->unit_id?->getLabel() ?? '';
+                    }),
 
                 Toggle::make('is_active')
                     ->label('Доступен для использования')

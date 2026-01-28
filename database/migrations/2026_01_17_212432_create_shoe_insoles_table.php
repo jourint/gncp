@@ -17,8 +17,9 @@ return new class extends Migration
             $table->boolean('is_soft_texon')->default(false); // жёсткий или мягкий тексон
             $table->enum('type', ['inset', 'fitting', 'half-insole']); // вкладная, обтяжная, полустелька
             $table->boolean('has_egg')->default(false); // нужна ли "яичка", , 
-            $table->boolean('is_active')->default(true);
+            $table->boolean('is_active')->default(true)->index(); // активна ли стелька
             $table->timestamps();
+
             $table->unique(['name', 'is_soft_texon', 'type'], 'unique_shoe_insole');
         });
     }

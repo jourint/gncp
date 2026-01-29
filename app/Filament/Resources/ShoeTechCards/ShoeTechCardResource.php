@@ -19,7 +19,7 @@ class ShoeTechCardResource extends Resource
 {
     protected static ?string $model = ShoeTechCard::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
 
     protected static string |UnitEnum|null $navigationGroup = 'Производство';
     protected static ?int $navigationSort = 3;

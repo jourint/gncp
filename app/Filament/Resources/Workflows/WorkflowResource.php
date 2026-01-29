@@ -19,7 +19,7 @@ class WorkflowResource extends Resource
 {
     protected static ?string $model = Workflow::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowsRightLeft;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowPath;
 
     protected static string |UnitEnum|null $navigationGroup = 'Справочники';
     protected static ?int $navigationSort = 4;

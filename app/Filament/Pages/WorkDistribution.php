@@ -310,4 +310,76 @@ class WorkDistribution extends Page
                 ->send();
         }
     }
+
+    /**
+     * Сводная матрица распределения (План из заказов vs Факт по сотрудникам)
+     */
+    public function getShopFloorTableDataProperty(): array
+    {
+        // 1. Базовая проверка: если дата не выбрана, возвращаем пустые массивы
+        if (!$this->selected_date) {
+            return [
+                'employees' => collect(),
+                'models' => collect(),
+                'orderTotals' => [],
+            ];
+        }
+
+        // 2. ПОЛНЫЙ ПЛАН: Получаем все позиции заказов на текущую дату из БД.
+        // Нам нужны абсолютно все позиции, чтобы видеть "чистый" объем заказа.
+        $allPositions = OrderPosition::query()
+            ->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
+            ->with(['shoeTechCard', 'size'])
+            ->get();
+
+        $orderTotals = [];
+        $allRowKeys = collect();
+
+        foreach ($allPositions as $pos) {
+            $modelName = $pos->shoeTechCard->name ?? '---';
+            $sizeName = $pos->size->name ?? '??';
+            $key = "{$modelName} | РАЗМЕР: {$sizeName}";
+
+            // Суммируем план из заказа
+            $orderTotals[$key] = ($orderTotals[$key] ?? 0) + $pos->quantity;
+            $allRowKeys->push($key);
+        }
+
+        // Получаем уникальный отсортированный список всех комбинаций Модель+Размер
+        $uniqueRows = $allRowKeys->unique()->sort()->values();
+
+        // 3. ФАКТИЧЕСКОЕ РАСПРЕДЕЛЕНИЕ: Получаем сотрудников выбранного цеха
+        // и подгружаем только те работы, которые были назначены на эту дату.
+        $employeesWithWork = \App\Models\Employee::query()
+            ->where('job_position_id', $this->selected_job_id)
+            ->where('is_active', true)
+            ->with(['orderEmployees' => function ($query) {
+                $query->whereHas('order', fn($q) => $q->where('started_at', $this->selected_date))
+                    ->with(['orderPosition.shoeTechCard', 'orderPosition.size']);
+            }])
+            ->get();
+
+        // 4. ФОРМИРОВАНИЕ МАТРИЦЫ: Превращаем коллекцию сотрудников в массив данных для ячеек
+        $matrix = $employeesWithWork->map(function ($emp) {
+            // Группируем работу конкретного человека по ключу Модель+Размер
+            $employeeDetails = $emp->orderEmployees->groupBy(function ($work) {
+                $mName = $work->orderPosition->shoeTechCard->name ?? '---';
+                $sName = $work->orderPosition->size->name ?? '??';
+                return "{$mName} | РАЗМЕР: {$sName}";
+            })->map(fn($group) => $group->sum('quantity'));
+
+            return [
+                'id' => $emp->id,
+                'name' => $emp->name,
+                'total_qty' => $emp->orderEmployees->sum('quantity'),
+                'matrix_details' => $employeeDetails,
+            ];
+        });
+
+        return [
+            'employees' => $matrix,
+            'models' => $uniqueRows,
+            'orderTotals' => $orderTotals, // Чистый план из заказов для левой колонки
+        ];
+    }
 }

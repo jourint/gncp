@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        //    $this->configureDebugbar();
 
         // Observers
         \App\Models\MaterialMovement::observe(\App\Observers\MaterialMovementObserver::class);
@@ -56,5 +57,12 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
                 : null
         );
+    }
+
+    protected function configureDebugbar(): void
+    {
+        // Выключаем по умолчанию для всех
+        // \Illuminate\Support\Facades\Config::set('debugbar.enabled', false);
+
     }
 }

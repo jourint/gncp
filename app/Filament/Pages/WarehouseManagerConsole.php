@@ -14,7 +14,7 @@ use App\Services\WarehouseService;
 
 class WarehouseManagerConsole extends Page
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedComputerDesktop;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArchiveBox;
     protected string $view = 'filament.pages.warehouse-manager-console';
     protected static ?string $title = 'АРМ - Складской учет';
     protected static ?int $navigationSort = 10;

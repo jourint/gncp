@@ -22,7 +22,7 @@ class OrderPositionResource extends Resource
     // hidden from navigation
     // protected static bool $shouldRegisterNavigation = false;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQueueList;
 
     protected static string |UnitEnum|null $navigationGroup = 'Производство';
     protected static ?int $navigationSort = 99;

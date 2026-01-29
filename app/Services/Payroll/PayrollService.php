@@ -15,13 +15,13 @@ class PayrollService
     /**
      * Получает сводную статистику по сотрудникам за период.
      */
-    public function getSummary(string $from, string $to, ?int $jobPositionId, string $search = ''): Collection
+    public function getSummary(string $from, string $to, int|string|null $jobPositionId, string $search = ''): Collection
     {
         $position = $jobPositionId ? JobPosition::tryFrom($jobPositionId) : null;
 
         return Employee::query()
             ->when($position, fn($q) => $q->where('job_position_id', $position->value))
-            ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
+            ->when($search, fn($q) => $q->where('name', 'iLike', "%{$search}%"))
             // Считаем общее кол-во
             ->withSum(['orderEmployees as total_qty' => function ($q) use ($from, $to) {
                 $q->whereHas('order', fn($o) => $o->whereBetween('started_at', [$from, $to]));
@@ -30,13 +30,13 @@ class PayrollService
             // В Laravel для сложных вычислений в withSum можно использовать DB::raw
             ->withSum(['orderEmployees as total_sum' => function ($q) use ($from, $to) {
                 $q->whereHas('order', fn($o) => $o->whereBetween('started_at', [$from, $to]))
-                    ->select(DB::raw('SUM(quantity * price_per_pair)'));
+                    ->select(DB::raw('COALESCE(SUM(quantity * price_per_pair), 0)'));
             }], 'id') // 'id' тут формальность, так как raw переопределит select
             // Считаем долг (где is_paid = false)
             ->withSum(['orderEmployees as debt_sum' => function ($q) use ($from, $to) {
                 $q->where('is_paid', false)
                     ->whereHas('order', fn($o) => $o->whereBetween('started_at', [$from, $to]))
-                    ->select(DB::raw('SUM(quantity * price_per_pair)'));
+                    ->select(DB::raw('COALESCE(SUM(quantity * price_per_pair), 0)'));
             }], 'id')
             // Оставляем только тех, у кого была работа
             ->has('orderEmployees')
@@ -64,6 +64,7 @@ class PayrollService
             ->where('order_employees.employee_id', $employeeId)
             ->whereBetween('orders.started_at', [$from, $to])
             ->select([
+                'order_employees.id as row_id',
                 'orders.started_at as work_date',
                 'shoe_tech_cards.name as card_name',
                 'order_employees.quantity',
@@ -76,6 +77,7 @@ class PayrollService
         $grouped = [];
         foreach ($rawData as $item) {
             $grouped[$item->work_date][$item->card_name] = [
+                'row_id'     => $item->row_id,
                 'model_name' => $item->card_name,
                 'qty'        => ($grouped[$item->work_date][$item->card_name]['qty'] ?? 0) + $item->quantity,
                 'price'      => (float)$item->price_per_pair,

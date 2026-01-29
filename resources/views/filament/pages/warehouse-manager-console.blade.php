@@ -26,7 +26,7 @@
         @include('filament.pages.partials.warehouse-soles-table')
 
         {{-- Вынесенная модалка --}}
-        <x-filament::modal id="movement-modal" width="6xl" sticky-header>
+        <x-filament::modal id="movement-modal" width="6xl" sticky-header :lazy="true">
             <x-slot name="heading">
                 <div class="flex items-center gap-2">
                     <x-heroicon-o-truck class="w-6 h-6 text-primary-500"/>

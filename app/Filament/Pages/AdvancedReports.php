@@ -15,7 +15,7 @@ class AdvancedReports extends Page
     use CanExportPdf;
 
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedComputerDesktop;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentChartBar;
     protected string $view = 'filament.pages.advanced-reports';
     protected static ?string $title = 'АРМ - Отчеты по заказам';
     protected static ?int $navigationSort = 3;

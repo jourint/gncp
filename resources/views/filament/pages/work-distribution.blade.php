@@ -237,6 +237,112 @@
         </div>
     </x-filament::section>
 
+    {{-- Сравнение заказа по цеху --}}
+    <x-filament::modal width="7xl" :lazy="true"> {{-- screen - на весь экран --}}
+        <x-slot name="trigger">
+            <x-filament::button icon="heroicon-m-table-cells" color="gray">
+                Сравнить нагрузку (с размерами)
+            </x-filament::button>
+        </x-slot>
 
+        <x-slot name="heading">
+            Сводная ведомость по цеху: {{ $this->selected_date }}
+        </x-slot>
+
+        @php
+            $tableData = $this->shopFloorTableData;
+        @endphp
+
+        <div class="overflow-x-auto border rounded-xl dark:border-white/10 mt-4 max-h-[75vh]">
+            <table class="w-full text-left text-[11px] uppercase tracking-tight border-separate border-spacing-0">
+                <thead>
+                    <tr class="bg-gray-100 dark:bg-white/5 text-gray-500 sticky top-0 z-20">
+                        {{-- 1. Модель/Размер --}}
+                        <th class="py-3 px-4 border-r border-b dark:border-white/10 w-80 sticky left-0 bg-gray-100 dark:bg-gray-900 z-30">
+                            Модель и Размер
+                        </th>
+                        {{-- 2. НОВАЯ КОЛОНКА: План из заказа --}}
+                        <th class="py-3 px-3 border-r border-b dark:border-white/10 text-center bg-gray-50 dark:bg-gray-800 font-black text-gray-900 dark:text-white w-28">
+                            План (Заказ)
+                        </th>
+                        {{-- 3. Сотрудники --}}
+                        @foreach($tableData['employees'] as $emp)
+                            <th @class([
+                                'py-3 px-2 text-center border-r border-b dark:border-white/10 min-w-[120px]',
+                                'bg-primary-50 dark:bg-primary-900/40 text-primary-600' => $selected_employee_id == $emp['id']
+                            ])>
+                                <div class="font-black">{{ $emp['name'] }}</div>
+                                <div class="text-[9px] opacity-70 font-normal">Итого: {{ $emp['total_qty'] }}</div>
+                            </th>
+                        @endforeach
+                    </tr>
+                </thead>
+                <tbody class="divide-y dark:divide-white/10">
+                    @forelse($tableData['models'] as $rowKey)
+                        @php
+                            [$mName, $sName] = explode(' | ', $rowKey);
+                            $plan = $tableData['orderTotals'][$rowKey] ?? 0;
+                            $fact = $tableData['employees']->sum(fn($e) => $e['matrix_details'][$rowKey] ?? 0);
+                            $isShortage = $fact < $plan;
+                        @endphp
+                        <tr class="hover:bg-gray-50 dark:hover:bg-white/5 transition">
+                            {{-- Модель и Размер --}}
+                            <td class="py-2 px-4 border-r dark:border-white/10 sticky left-0 bg-white dark:bg-gray-900 z-10 border-b dark:border-white/5">
+                                <div class="flex justify-between items-center gap-4">
+                                    <span class="text-gray-600 dark:text-gray-400 font-medium">{{ $mName }}</span>
+                                    <span class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-black text-primary-600 border dark:border-white/10">
+                                        {{ str_replace('РАЗМЕР: ', '', $sName) }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            {{-- ПЛАН / ФАКТ (Индикатор дефицита) --}}
+                            <td @class([
+                                'py-2 px-3 text-center border-r dark:border-white/10 font-black border-b dark:border-white/5',
+                                'bg-danger-50 text-danger-700 dark:bg-danger-900/20' => $isShortage,
+                                'bg-success-50 text-success-700 dark:bg-success-900/20' => !$isShortage,
+                            ])>
+                                {{ $fact }} / {{ $plan }}
+                            </td>
+
+                            {{-- Колонки сотрудников --}}
+                            @foreach($tableData['employees'] as $emp)
+                                @php $qty = $emp['matrix_details'][$rowKey] ?? 0; @endphp
+                                <td @class([
+                                    'py-2 px-2 text-center border-r dark:border-white/10 text-sm border-b dark:border-white/5',
+                                    'text-gray-200 dark:text-gray-700' => $qty == 0,
+                                    'text-gray-900 dark:text-white font-black bg-primary-50/10' => $qty > 0,
+                                ])>
+                                    {{ $qty > 0 ? $qty : '-' }}
+                                </td>
+                            @endforeach
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="{{ count($tableData['employees']) + 2 }}" class="p-8 text-center text-gray-400 italic">
+                                Данные отсутствуют
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+                <tfoot class="bg-gray-100 dark:bg-white/5 font-black border-t-2 dark:border-white/20 sticky bottom-0 z-20">
+                    <tr>
+                        <td class="py-3 px-4 border-r dark:border-white/10 text-right sticky left-0 bg-gray-100 dark:bg-gray-900 z-30">
+                            ОБЩИЙ ВЫПУСК (ФАКТ / ПЛАН):
+                        </td>
+                        {{-- Общий итог по всему заказу --}}
+                        <td class="py-3 px-3 border-r dark:border-white/10 text-center bg-gray-50 dark:bg-gray-800 text-primary-600">
+                            {{ $tableData['employees']->sum('total_qty') }} / {{ array_sum($tableData['orderTotals']) }}
+                        </td>
+                        @foreach($tableData['employees'] as $emp)
+                            <td class="py-3 px-2 text-center border-r dark:border-white/10 text-base text-primary-600">
+                                {{ $emp['total_qty'] }}
+                            </td>
+                        @endforeach
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </x-filament::modal>
 
 </x-filament-panels::page>

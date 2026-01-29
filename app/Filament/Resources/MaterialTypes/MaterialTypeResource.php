@@ -19,7 +19,7 @@ class MaterialTypeResource extends Resource
 {
     protected static ?string $model = MaterialType::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquare3Stack3d;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
     protected static string |UnitEnum|null $navigationGroup = 'Справочники';
     protected static ?int $navigationSort = 6;

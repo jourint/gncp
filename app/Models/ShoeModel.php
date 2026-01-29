@@ -24,6 +24,7 @@ class ShoeModel extends Model
     protected function casts(): array
     {
         return [
+            'description' => 'string',
             'is_active' => 'boolean',
             'available_sizes' => 'array',
             'workflows' => 'array',
@@ -56,6 +57,11 @@ class ShoeModel extends Model
     public function puff(): BelongsTo
     {
         return $this->belongsTo(Puff::class);
+    }
+
+    public function shoeModelPatterns(): HasMany
+    {
+        return $this->hasMany(ShoeModelPattern::class);
     }
 
     /**

@@ -19,7 +19,7 @@ class MaterialLiningResource extends Resource
 {
     protected static ?string $model = MaterialLining::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
 
     protected static string |UnitEnum|null $navigationGroup = 'Справочники';
     protected static ?int $navigationSort = 12;

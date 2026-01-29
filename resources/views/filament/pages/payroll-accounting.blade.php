@@ -151,7 +151,7 @@
     </div>
 
     {{-- 3. Модальное окно детализации сотрудника --}}
-    <x-filament::modal id="employee-details-modal" width="5xl">
+    <x-filament::modal id="employee-details-modal" width="5xl" :lazy="true">
         <span autofocus tabindex="-1" style="position: absolute; top: 0;"></span>
         <x-slot name="header">
             <div class="flex items-center gap-3">
@@ -194,7 +194,16 @@
                             <tbody class="divide-y divide-slate-100 bg-white">
                                 @foreach($models as $model)
                                     <tr class="text-sm">
-                                        <td class="p-3 font-medium text-slate-800">{{ $model['model_name'] }}</td>
+                                        <td class="p-3 font-medium text-slate-800">
+                                            <a 
+                                                href="{{ \App\Filament\Resources\OrderEmployees\OrderEmployeeResource::getUrl('edit', ['record' => $model['row_id']]) }}" 
+                                                target="_blank" 
+                                                class="flex items-center gap-1 hover:text-indigo-600 transition-colors group/link decoration-dotted underline-offset-4 hover:underline"
+                                            >
+                                                {{ $model['model_name'] }}
+                                                <x-heroicon-m-arrow-top-right-on-square class="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity text-slate-400 no-print" />
+                                            </a>
+                                        </td>
                                         <td class="p-3 text-center font-mono font-bold">{{ $model['qty'] }}</td>
                                         <td class="p-3 text-right text-slate-500">{{ number_format($model['price'], 2, '.', ' ') }} ₴</td>
                                         <td class="p-3 text-right font-bold text-slate-900">
@@ -235,7 +244,7 @@
     </x-filament::modal>
 
     {{-- 4. Модальное окно дополнительных работ --}}
-    <x-filament::modal id="extra-works-modal" width="4xl">
+    <x-filament::modal id="extra-works-modal" width="4xl" :lazy="true">
         <span autofocus tabindex="-1" style="position: absolute; top: 0;"></span>
         <x-slot name="header">
             <div class="flex items-center gap-3">

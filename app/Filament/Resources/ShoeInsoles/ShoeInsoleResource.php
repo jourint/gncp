@@ -19,7 +19,7 @@ class ShoeInsoleResource extends Resource
 {
     protected static ?string $model = ShoeInsole::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTicket;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedEllipsisHorizontalCircle;
 
     protected static string |UnitEnum|null $navigationGroup = 'Справочники';
     protected static ?int $navigationSort = 9;

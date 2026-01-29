@@ -6,6 +6,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
 use App\Models\Workflow;
 use Filament\Schemas\Components\Grid;
@@ -67,6 +68,10 @@ class ShoeModelForm
                                     ->prefix('x'),
                             ]),
                     ]),
+                Textarea::make('description')
+                    ->label('Комментарий (255 символов)')
+                    ->maxLength(255)
+                    ->columnSpanFull(),
                 // Блок типов подноски и задника
                 Grid::make(3)
                     ->schema([

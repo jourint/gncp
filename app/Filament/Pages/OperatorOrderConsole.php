@@ -17,7 +17,7 @@ use App\Enums\OrderStatus;
 
 class OperatorOrderConsole extends Page
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedComputerDesktop;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
     protected string $view = 'filament.pages.operator-order-console';
     protected static ?string $title = 'АРМ - Оператор заказов';
     protected static ?int $navigationSort = 1;

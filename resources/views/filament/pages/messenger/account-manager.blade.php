@@ -68,7 +68,7 @@
                                         {{ mb_substr($user->name, 0, 1) }}
                                     </div>
                                     <div class="flex flex-col">
-                                        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">{{ $user->name }}</span>
+                                        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">{{ $user->fullName }}</span>
                                         <span class="text-[10px] text-gray-400 mt-0.5">{{ format_phone($user->phone) ?? 'нет телефона' }}</span>
                                     </div>
                                 </div>

@@ -8,6 +8,11 @@ use Filament\Pages\Page;
 use App\Filament\Pages\Messenger\Actions\BroadcastAction;
 use App\Filament\Pages\Messenger\Actions\SyncTelegramAction;
 use App\Filament\Pages\Messenger\Modules\AccountManager;
+use App\Filament\Pages\Messenger\Modules\ReportCustomer;
+use App\Filament\Pages\Messenger\Modules\ReportEmployee;
+use App\Filament\Pages\Messenger\Modules\ReportExpedition;
+use App\Filament\Pages\Messenger\Modules\ReportAccountant;
+use App\Filament\Pages\Messenger\Modules\ReportWarehouse;
 
 
 class MessengerPanel extends Page
@@ -26,6 +31,11 @@ class MessengerPanel extends Page
     {
         return [
             'accounts' => AccountManager::class,
+            'report_customers' => ReportCustomer::class,
+            'report_employees' => ReportEmployee::class,
+            'report_expedition' => ReportExpedition::class,
+            'report_accountants' => ReportAccountant::class,
+            'report_warehouse' => ReportWarehouse::class,
         ];
     }
 

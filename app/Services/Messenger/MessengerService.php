@@ -61,7 +61,8 @@ class MessengerService
                 $account->update(['is_active' => false]);
             }
 
-            Log::warning("Messenger send error [{$account->driver}]: {$error}");
+            $driverName = $account->driver instanceof \BackedEnum ? $account->driver->value : $account->driver;
+            Log::warning("Messenger send error [{$driverName}]: {$error}");
         } else {
             // 2. Обновляем статус в логах на успешную отправку
             $messengerLog->update([
@@ -140,5 +141,16 @@ class MessengerService
         if ($message->payload === '/help') {
             $this->driver($driverType)->send($message->chatId, "Список доступных команд: ...");
         }
+    }
+
+    public function formatForTelegram(string $html): string
+    {
+        // 1. Заменяем списки на текстовые аналоги
+        $html = str_replace(['<ul>', '<ol>'], "\n", $html);
+        $html = str_replace('<li>', "  • ", $html); // Для маркированного списка
+        $html = str_replace(['</ul>', '</ol>', '</li>'], "\n", $html);
+        $html = str_replace(['</p>', '<br>', '<br />'], "\n", $html);
+        $allowedTags = '<b><strong><i><em><u><ins><s><strike><del><a><code><pre><blockquote>';
+        return trim(strip_tags($html, $allowedTags));
     }
 }

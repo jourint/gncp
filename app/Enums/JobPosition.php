@@ -11,6 +11,7 @@ enum JobPosition: int implements HasLabel, HasColor
     case Cutting = 1;
     case Sewing = 2;
     case Shoemaker = 3;
+    case Other = 4;
 
     public function getLabel(): ?string
     {
@@ -19,6 +20,7 @@ enum JobPosition: int implements HasLabel, HasColor
             self::Cutting => 'Закройный цех',
             self::Sewing => 'Швейный цех',
             self::Shoemaker => 'Сапожный цех',
+            self::Other => 'Другое',
         };
     }
 
@@ -29,6 +31,7 @@ enum JobPosition: int implements HasLabel, HasColor
             self::Cutting => 'info',    // Синий
             self::Sewing => 'warning',  // Желтый/Оранжевый
             self::Shoemaker => 'success', // Зеленый
+            self::Other => 'secondary',
         };
     }
 
@@ -39,6 +42,7 @@ enum JobPosition: int implements HasLabel, HasColor
             self::Cutting => '#3b82f6',   // Blue
             self::Sewing => '#f59e0b',    // Amber
             self::Shoemaker => '#10b981', // Emerald
+            self::Other => '#6b7280',     // Gray
             default => '#94a3b8',
         };
     }

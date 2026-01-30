@@ -36,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
             'material'       => \App\Models\Material::class,
             'sole'           => \App\Models\ShoeSoleItem::class,
             'order_employee' => \App\Models\OrderEmployee::class,
+            'employee'       => \App\Models\Employee::class,
+            'customer'       => \App\Models\Customer::class,
         ]);
     }
 

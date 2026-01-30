@@ -14,6 +14,18 @@ return [
     |
     */
 
+    'telegram' => [
+        'token' => env('TELEGRAM_BOT_TOKEN'),
+        'bot_username' => env('TELEGRAM_BOT_USERNAME'),
+        'webhook_token' => env('TELEGRAM_WEBHOOK_TOKEN'),
+    ],
+
+    'viber' => [
+        'token' => env('VIBER_BOT_TOKEN'),
+        'uri' => env('VIBER_BOT_URI'),
+        'webhook_token' => env('VIBER_WEBHOOK_TOKEN'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

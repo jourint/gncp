@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Enums\JobPosition;
 
@@ -20,6 +20,16 @@ class Employee extends Model
             'is_active' => 'boolean',
             'skill_level' => 'decimal:2',
         ];
+    }
+
+    public function messengerAccounts(): MorphMany
+    {
+        return $this->morphMany(MessengerAccount::class, 'messengerable');
+    }
+
+    public function messengerInvites()
+    {
+        return $this->morphMany(MessengerInvite::class, 'invitable');
     }
 
     public function orderEmployees(): HasMany

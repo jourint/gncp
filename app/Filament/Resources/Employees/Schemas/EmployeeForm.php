@@ -37,12 +37,20 @@ class EmployeeForm
 
                 TextInput::make('skill_level')
                     ->label('Коэффициент навыков')
+                    //    ->helperText('Используется для распределения пар из заказа')
                     ->numeric()
                     ->step(0.01)
                     ->minValue(0.01)
                     ->maxValue(1.99)
-                    ->default(1.00)
-                    ->helperText('Используется для распределения пар из заказа'),
+                    ->default(1.00),
+
+                Select::make('messengerPermissions')
+                    ->label('Разрешенные команды для мессенджера')
+                    ->multiple()
+                    ->relationship('messengerPermissions', 'label')
+                    ->preload()
+                    ->searchable()
+                    ->columnSpanFull(),
 
                 Toggle::make('is_active')
                     ->label('Работает в штате')

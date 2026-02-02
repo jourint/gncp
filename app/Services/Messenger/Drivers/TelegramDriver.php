@@ -44,6 +44,7 @@ class TelegramDriver extends AbstractMessengerDriver
         };
 
         return new IncomingMessage(
+            senderId: (string)($from['id'] ?? ''),
             chatId: (string)($msg['chat']['id'] ?? $from['id'] ?? ''),
             type: $type,
             payload: $payload,
@@ -63,7 +64,7 @@ class TelegramDriver extends AbstractMessengerDriver
     {
         $response = $this->api('getUpdates', [
             'offset'  => $offset,
-            'timeout' => 5,
+            'timeout' => 2,
         ]);
 
         return $response['result'] ?? [];

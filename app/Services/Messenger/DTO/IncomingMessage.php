@@ -5,12 +5,13 @@ namespace App\Services\Messenger\DTO;
 readonly class IncomingMessage
 {
     public function __construct(
-        public string $chatId,
+        public string $senderId,                    // ID конкретного пользователя
+        public string $chatId,                      // ID чата для ответа (может быть группой)
         public MessageType $type,
-        public ?string $payload = null,          // Текст сообщения или данные коллбэка
-        public ?string $senderIdentifier = null, // Username (например, @gemini_ai)
-        public ?string $senderNickname = null,   // Отображаемое имя (First + Last Name)
-        public array $metadata = []              // Любые доп. данные от мессенджера (update_id и т.д.)
+        public ?string $payload = null,             // Текст сообщения или данные коллбэка
+        public ?string $senderIdentifier = null,    // Username (например, @gemini_ai)
+        public ?string $senderNickname = null,      // Отображаемое имя (First + Last Name)
+        public array $metadata = []                 // Любые доп. данные от мессенджера (update_id и т.д.)
     ) {}
 
     /**
@@ -32,5 +33,10 @@ readonly class IncomingMessage
         }
 
         return null;
+    }
+
+    public function isPrivate(): bool
+    {
+        return $this->chatId === $this->senderId;
     }
 }

@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Enums\JobPosition;
+use App\Traits\HasMessengerAccess;
 
 class Employee extends Model
 {
+    use HasMessengerAccess;
+
     protected $fillable = ['name', 'job_position_id', 'phone', 'is_active', 'skill_level'];
 
     protected function casts(): array

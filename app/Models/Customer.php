@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use App\Traits\HasMessengerAccess;
 
 class Customer extends Model
 {
+    use HasMessengerAccess;
+
     protected $fillable = ['name', 'phone', 'is_active'];
 
     protected function casts(): array

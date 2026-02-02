@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Customers\Schemas;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 
 class CustomerForm
@@ -25,6 +26,14 @@ class CustomerForm
                     ->mask('+38 (999) 999-99-99')
                     ->stripCharacters([' ', '(', ')', '-', '+'])
                     ->placeholder('+38 (___) ___-__-__'),
+
+                Select::make('messengerPermissions')
+                    ->label('Разрешенные команды для мессенджера')
+                    ->multiple()
+                    ->relationship('messengerPermissions', 'label')
+                    ->preload()
+                    ->searchable()
+                    ->columnSpanFull(),
 
                 Toggle::make('is_active')
                     ->label('Активен')

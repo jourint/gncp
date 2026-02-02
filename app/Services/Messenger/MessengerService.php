@@ -10,6 +10,7 @@ use App\Services\Messenger\DTO\IncomingMessage;
 use App\Services\Messenger\Drivers\MessengerDriverInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use \App\Services\Messenger\Bot\BotEngine;
 
 class MessengerService
 {
@@ -79,6 +80,8 @@ class MessengerService
      */
     public function handleIncoming(MessengerDriver $driverType, array $rawData): void
     {
+        \Illuminate\Support\Facades\Storage::append('debug/messenger_raw.json', json_encode($rawData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
         $driver = $this->driver($driverType);
         $message = $driver->parseRequest($rawData);
 
@@ -94,6 +97,15 @@ class MessengerService
 
     protected function processRegistration(MessengerDriver $driverType, IncomingMessage $message, string $token): void
     {
+        // КРИТИЧЕСКИЙ ФИЛЬТР: Регистрация только в ЛС
+        if (!$message->isPrivate()) {
+            $this->driver($driverType)->send(
+                $message->chatId,
+                "⚠️ <b>Безопасность:</b> Регистрация аккаунта возможна только в личных сообщениях с ботом. Пожалуйста, напишите мне в ЛС."
+            );
+            return;
+        }
+
         DB::transaction(function () use ($driverType, $message, $token) {
             $invite = MessengerInvite::where('token', $token)
                 ->where('driver', $driverType->value)
@@ -106,8 +118,9 @@ class MessengerService
             }
 
             MessengerAccount::updateOrCreate(
-                ['driver' => $driverType->value, 'chat_id' => $message->chatId],
+                ['driver' => $driverType->value, 'user_id' => $message->senderId],
                 [
+                    'chat_id'            => $message->chatId,
                     'messengerable_id'   => $invite->invitable_id,
                     'messengerable_type' => $invite->invitable_type,
                     'identifier'         => $message->senderIdentifier,
@@ -128,19 +141,16 @@ class MessengerService
     protected function processAuthenticatedMessage(MessengerDriver $driverType, IncomingMessage $message): void
     {
         $account = MessengerAccount::where('driver', $driverType->value)
-            ->where('chat_id', $message->chatId)
+            ->where('chat_id', $message->senderId)
             ->where('is_active', true)
             ->first();
 
         if (!$account) {
-            // Опционально: можно отправить инструкцию по подключению
+            $this->driver($driverType)->send($message->chatId, "⚠️ Ваш аккаунт не авторизован. Используйте ссылку из личного кабинета для привязки мессенджера.");
             return;
         }
 
-        // Здесь реализуется логика ответов бота (например, обработка команд меню)
-        if ($message->payload === '/help') {
-            $this->driver($driverType)->send($message->chatId, "Список доступных команд: ...");
-        }
+        app(BotEngine::class)->process($account, $message);
     }
 
     public function formatForTelegram(string $html): string

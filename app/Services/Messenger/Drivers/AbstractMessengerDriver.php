@@ -26,19 +26,27 @@ abstract class AbstractMessengerDriver implements MessengerDriverInterface
     public function api(string $method, array $data = [], string $httpMethod = 'post'): array
     {
         try {
+            $request = Http::timeout(20)->connectTimeout(10);
+
+            // Если в массиве $data есть ключ 'multipart', переключаемся на прикрепление файлов
+            if (isset($data['multipart']) && is_array($data['multipart'])) {
+                foreach ($data['multipart'] as $file) {
+                    // $file должен содержать: name, contents, filename
+                    $request->attach($file['name'], $file['contents'], $file['filename']);
+                }
+                // Удаляем служебный ключ, чтобы он не ушел в POST-полях
+                unset($data['multipart']);
+            }
+
             /** @var Response $response */
-            $response = Http::timeout(10) // Защита от зависания
-                ->connectTimeout(5)
-                ->{$httpMethod}("{$this->getBaseUrl()}/{$method}", $data);
+            $response = $request->{$httpMethod}("{$this->getBaseUrl()}/{$method}", $data);
 
             $json = $response->json();
 
             if ($response->failed()) {
-                // Если API вернуло ошибку (4xx, 5xx), парсим её
                 $this->lastError = is_array($json)
                     ? $this->extractErrorMessage($json)
                     : "HTTP Error: {$response->status()}";
-
                 return [];
             }
 

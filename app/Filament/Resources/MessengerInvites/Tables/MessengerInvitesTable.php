@@ -9,12 +9,14 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use App\Enums\MessengerDriver;
+use Carbon\Carbon;
 
 class MessengerInvitesTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('updated_at', 'desc')
             ->columns([
                 TextColumn::make('invitable_type')
                     ->label('Тип аккаунта')
@@ -41,6 +43,8 @@ class MessengerInvitesTable
                 TextColumn::make('expires_at')
                     ->label('Истекает в')
                     ->dateTime()
+                    ->badge()
+                    ->color(fn($state): string => $state && Carbon::parse($state)->isPast() ? 'danger' : 'success')
                     ->sortable(),
 
                 TextColumn::make('driver')

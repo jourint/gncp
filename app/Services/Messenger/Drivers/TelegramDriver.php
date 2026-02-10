@@ -4,6 +4,8 @@ namespace App\Services\Messenger\Drivers;
 
 use App\Services\Messenger\DTO\IncomingMessage;
 use App\Services\Messenger\DTO\MessageType;
+use App\Services\Messenger\DTO\ReplyKeyboard;
+use Illuminate\Support\Facades\Storage;
 
 class TelegramDriver extends AbstractMessengerDriver
 {
@@ -20,11 +22,53 @@ class TelegramDriver extends AbstractMessengerDriver
 
     public function send(string $chatId, string $text, array $options = []): bool
     {
-        $response = $this->api('sendMessage', array_merge([
+        $params = [
             'chat_id'    => $chatId,
             'text'       => $text,
-            'parse_mode' => 'HTML', // Стандарт для красивых уведомлений
-        ], $options));
+            'parse_mode' => $options['parse_mode'] ?? 'HTML',
+        ];
+
+        // Проверяем, передана ли универсальная клавиатура
+        if (isset($options['keyboard']) && $options['keyboard'] instanceof ReplyKeyboard) {
+            $params['reply_markup'] = json_encode([
+                'keyboard'          => $options['keyboard']->getRows(),
+                'resize_keyboard'   => true,
+                'one_time_keyboard' => false, // Обычно лучше оставить false для меню управления
+            ]);
+        }
+        // Если передана «сырая» разметка (например, InlineKeyboardMarkup)
+        elseif (isset($options['reply_markup'])) {
+            $params['reply_markup'] = is_array($options['reply_markup'])
+                ? json_encode($options['reply_markup'])
+                : $options['reply_markup'];
+        }
+
+        $response = $this->api('sendMessage', $params);
+
+        return !empty($response['ok']);
+    }
+
+    public function sendPhoto(string $chatId, string $path, string $caption = '', array $options = []): bool
+    {
+        // Забираем контент файла из хранилища (R2/S3/Local)
+        if (!Storage::exists($path)) {
+            $this->lastError = "File not found: {$path}";
+            return false;
+        }
+
+        $response = $this->api('sendPhoto', [
+            'chat_id'    => $chatId,
+            'caption'    => $caption,
+            'parse_mode' => $options['parse_mode'] ?? 'HTML',
+            // Передаем специальный ключ для абстрактного класса
+            'multipart' => [
+                [
+                    'name'     => 'photo',
+                    'contents' => Storage::get($path),
+                    'filename' => basename($path),
+                ]
+            ]
+        ]);
 
         return !empty($response['ok']);
     }

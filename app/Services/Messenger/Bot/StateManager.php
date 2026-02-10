@@ -40,4 +40,11 @@ class StateManager
     {
         $account->botState()->delete();
     }
+
+    public function setValidOptions(MessengerAccount $account, array $options): void
+    {
+        $this->setState($account, $account->botState->command_name, $account->botState->step, [
+            '_valid_options' => $options
+        ]);
+    }
 }

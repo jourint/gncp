@@ -76,6 +76,53 @@ class MessengerService
     }
 
     /**
+     * Универсальный метод отправки фото конкретному аккаунту с логированием.
+     */
+    public function sendPhoto(MessengerAccount $account, string $path, string $caption = '', array $options = []): bool
+    {
+        // Определяем драйвер (Telegram/Viber/и т.д.) через твой Enum
+        $driverEnum = $account->driver instanceof MessengerDriver
+            ? $account->driver
+            : MessengerDriver::tryFrom((string) $account->driver);
+
+        if (!$driverEnum) {
+            Log::error("Не удалось определить драйвер для фото (Аккаунт ID: {$account->id})");
+            return false;
+        }
+
+        // 1. Создаем запись в логах (аналогично sendMessage)
+        $messengerLog = MessengerLog::create([
+            'messenger_account_id' => $account->id,
+            'title'   => $options['title'] ?? 'Отправка изображения',
+            'message' => "[Photo]: {$path}" . ($caption ? " | Caption: {$caption}" : ""),
+            'status'  => 'pending',
+        ]);
+
+        $driver = $this->driver($driverEnum);
+
+        // 2. Вызываем метод sendPhoto у драйвера
+        // (Метод должен быть объявлен в MessengerDriverInterface и реализован в TelegramDriver)
+        $success = $driver->sendPhoto($account->chat_id, $path, $caption, $options);
+
+        if (!$success) {
+            $error = $driver->getLastError();
+            $messengerLog->update([
+                'status' => 'failed',
+                'error_message' => $error,
+            ]);
+
+            Log::warning("Messenger photo send error [{$driverEnum->value}]: {$error}");
+        } else {
+            $messengerLog->update([
+                'status' => 'sent',
+                'sent_at' => now(),
+            ]);
+        }
+
+        return $success;
+    }
+
+    /**
      * Главная точка входа для всех мессенджеров.
      */
     public function handleIncoming(MessengerDriver $driverType, array $rawData): void

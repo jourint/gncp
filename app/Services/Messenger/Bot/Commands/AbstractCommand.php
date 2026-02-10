@@ -14,6 +14,8 @@ abstract class AbstractCommand implements BotCommandInterface
      */
     protected ?string $permissionName = null;
 
+    protected array $synonyms = [];
+
     abstract public function getTrigger(): string;
     abstract public function getDescription(): string;
 
@@ -34,17 +36,38 @@ abstract class AbstractCommand implements BotCommandInterface
      */
     public function canHandle(IncomingMessage $message, MessengerAccount $account): bool
     {
-        // 1. Прямой вызов команды (например, пользователь нажал /orders_list)
-        if ($message->payload === $this->getTrigger()) {
+        $payload = $message->payload;
+
+        // 1. Проверка по триггеру или синонимам
+        $isTriggered = ($payload === $this->getTrigger()) || in_array($payload, $this->synonyms);
+
+        if ($isTriggered) {
             return true;
         }
 
-        // 2. Если мы внутри процесса этой команды (состояние в БД совпадает с именем права)
+        // 2. Проверка по активному состоянию (FSM)
         $currentState = $account->botState?->command_name;
         if ($this->permissionName && $currentState === $this->permissionName) {
             return true;
         }
 
         return false;
+    }
+
+    public function validate(IncomingMessage $message, MessengerAccount $account): bool
+    {
+        $validOptions = $account->botState?->context['_valid_options'] ?? null;
+
+        // Если ограничений нет — валидация пройдена
+        if (is_null($validOptions)) {
+            return true;
+        }
+
+        // Добавляем системные команды в исключения (чтобы /cancel сработал всегда)
+        if (in_array($message->payload, ['/cancel', '/help', 'Отмена'])) {
+            return true;
+        }
+
+        return in_array($message->payload, $validOptions);
     }
 }

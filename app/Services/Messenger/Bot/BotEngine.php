@@ -11,9 +11,11 @@ class BotEngine
     protected array $commands = [
         Commands\System\HelpCommand::class,
         Commands\System\CancelCommand::class,
-        Commands\Orders\OrdersListCommand::class,
-        Commands\Orders\OrdersCreateCommand::class,
-        // Сюда добавляем все новые классы
+        Commands\Production\ModelImageCommand::class,
+
+        // Test
+        //    Commands\Orders\OrdersListCommand::class,
+        //    Commands\Orders\OrdersCreateCommand::class,
     ];
 
     public function __construct(protected MessengerService $messengerService) {}
@@ -24,9 +26,14 @@ class BotEngine
             $command = app($commandClass);
 
             if ($command->canHandle($message, $account)) {
-                // Финальный барьер безопасности
                 if (!$command->isAuthorized($account)) {
-                    $this->messengerService->sendMessage($account, "⛔ У вас нет прав на эту команду.");
+                    $this->messengerService->sendMessage($account, "⛔ Доступ запрещен.");
+                    return;
+                }
+
+                // --- АВТОМАТИЧЕСКАЯ ВАЛИДАЦИЯ ---
+                if (!$command->validate($message, $account)) {
+                    $this->messengerService->sendMessage($account, "⚠️ Пожалуйста, выберите один из вариантов на кнопках или введите /cancel для отмены.");
                     return;
                 }
 
@@ -34,8 +41,6 @@ class BotEngine
                 return;
             }
         }
-
-        $this->messengerService->sendMessage($account, "Неизвестная команда. Используйте /help");
     }
 
     public function getCommands(): array

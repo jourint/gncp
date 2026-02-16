@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\{Material, MaterialType, ShoeSole, ShoeSoleItem, MaterialMovement};
+use App\Models\{Order, Material, MaterialType, ShoeSole, ShoeSoleItem, MaterialMovement};
 use App\Enums\MovementType;
 use App\Filament\Pages\Reports\StockRequirementsReport;
 use Filament\Pages\Page;
@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Filament\Support\Icons\Heroicon;
 use BackedEnum;
 use App\Services\WarehouseService;
+use App\Enums\OrderStatus;
 
 class WarehouseManagerConsole extends Page
 {
@@ -27,11 +28,97 @@ class WarehouseManagerConsole extends Page
     public array $expandedNodes = [];
     public bool $isMovementModalOpen = false;
     private ?array $cachedStockReport = null;
+    public string $searchStock = '';
+    public ?int $editingMaterialId = null;
+    public float $editQuantity = 0;
+    public string $activeTab = 'materials';
+
 
 
     public function mount(): void
     {
         $this->selected_date = now()->format('Y-m-d');
+    }
+
+    public function getHasActiveOrdersProperty(): bool
+    {
+        return Order::query()
+            ->whereDate('started_at', $this->selected_date)
+            ->whereNotIn('status', [
+                OrderStatus::Completed->value,
+                OrderStatus::Cancelled->value
+            ])
+            ->exists();
+    }
+
+    /** 
+     * Начало редактирования
+     */
+    public function cancelEditing(): void
+    {
+        $this->editingMaterialId = null;
+    }
+
+    // Группировка материалов: Тип -> Базовое имя -> Список цветов
+    public function getInventoryGroupsProperty()
+    {
+        return Material::query()
+            ->with(['materialType', 'color'])
+            ->where('stock_quantity', '!=', 0)
+            ->where('is_active', true)
+            ->when($this->searchStock, fn($q) => $q->where('name', 'ilike', "%{$this->searchStock}%"))
+            ->get()
+            ->groupBy([
+                'material_type_id',
+                fn($item) => trim(str_ireplace($item->color?->name, '', $item->name))
+            ]);
+    }
+
+    public function getSoleInventoryProperty()
+    {
+        return ShoeSoleItem::query()
+            ->with(['shoeSole.color', 'size'])
+            ->where('stock_quantity', '!=', 0)
+            ->get()
+            ->sortBy([
+                ['shoeSole.name', 'asc'],
+                ['size.name', 'asc'],
+            ])
+            ->groupBy('shoe_sole_id');
+    }
+
+    public function startEditing(int $id)
+    {
+        $this->editingMaterialId = $id;
+        $this->editQuantity = 0;
+    }
+
+    public function applyQuickMovement(string $typeValue, string $alias): void
+    {
+        if ($this->editQuantity <= 0) return;
+
+        $modelClass = match ($alias) {
+            'material' => Material::class,
+            'sole' => ShoeSoleItem::class,
+            default => null,
+        };
+
+        if (!$modelClass) return;
+
+        DB::transaction(function () use ($typeValue, $modelClass) {
+            $record = $modelClass::findOrFail($this->editingMaterialId);
+
+            $record->movements()->create([
+                'type' => $typeValue, // Enum подхватит строку сам
+                'quantity' => $this->editQuantity,
+                'description' => "Корректировка через АРМ",
+                // user_id заполнится сам через booted в модели
+            ]);
+        });
+
+        $this->editingMaterialId = null;
+        $this->editQuantity = 0;
+        Notification::make()->success()->title('Запас обновлен')->send();
     }
 
     /**
@@ -292,5 +379,72 @@ class WarehouseManagerConsole extends Page
             }
         });
         Notification::make()->success()->title('Баланс пополнен')->send();
+    }
+
+    /**
+     * Массовое списание материалов и подошв на основе плана (выбранной даты)
+     */
+    public function applyBulkOrderWriteOff(): void
+    {
+        // 1. Находим заказы на выбранную дату, которые еще не выполнены
+        $orders = Order::query()
+            ->whereDate('started_at', $this->selected_date)
+            ->where('status', '!=', OrderStatus::Completed->value)
+            ->where('status', '!=', OrderStatus::Cancelled->value)
+            ->get();
+
+        if ($orders->isEmpty()) {
+            Notification::make()
+                ->warning()
+                ->title('Нет заказов для списания')
+                ->body("На {$this->selected_date} все заказы уже выполнены или отсутствуют.")
+                ->send();
+            return;
+        }
+
+        $report = $this->getStockReport();
+        $materialsNeeded = $report['materials_needed'] ?? [];
+        $solesNeeded = $report['soles_needed'] ?? [];
+
+        DB::transaction(function () use ($materialsNeeded, $solesNeeded, $orders) {
+            // 2. Списываем материалы по отчету
+            foreach ($materialsNeeded as $mat) {
+                if (($mat['needed'] ?? 0) <= 0) continue;
+                Material::find($mat['material_id'])?->movements()->create([
+                    'type' => MovementType::Outcome,
+                    'quantity' => $mat['needed'],
+                    'description' => "Авто-списание по плану на {$this->selected_date}",
+                ]);
+            }
+
+            // 3. Списываем подошвы по отчету
+            foreach ($solesNeeded as $sole) {
+                foreach ($sole['sizes'] ?? [] as $sizeId => $needed) {
+                    if ($needed <= 0) continue;
+                    ShoeSoleItem::where('shoe_sole_id', $sole['sole_id'])
+                        ->where('size_id', $sizeId)
+                        ->first()
+                        ?->movements()->create([
+                            'type' => MovementType::Outcome,
+                            'quantity' => $needed,
+                            'description' => "Авто-списание по плану на {$this->selected_date}",
+                        ]);
+                }
+            }
+
+            // 4. МЕНЯЕМ СТАТУС ЗАКАЗОВ НА ВЫПОЛНЕНО
+            foreach ($orders as $order) {
+                $order->update(['status' => OrderStatus::Completed->value]);
+            }
+        });
+
+        // Очищаем кэш отчета, чтобы дефицит в таблицах исчез
+        $this->cachedStockReport = null;
+
+        Notification::make()
+            ->success()
+            ->title('Списание проведено')
+            ->body("Материалы списаны, " . $orders->count() . " зак. переведены в статус 'Выполнено'")
+            ->send();
     }
 }

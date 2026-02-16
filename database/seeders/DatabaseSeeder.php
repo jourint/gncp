@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             ColorSeeder::class,
             ShoeTypeSeeder::class,
             MaterialTypeSeeder::class,
-
+            MessengerPermissionSeeder::class,
         ]);
     }
 }

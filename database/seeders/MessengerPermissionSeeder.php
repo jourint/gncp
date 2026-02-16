@@ -15,25 +15,10 @@ class MessengerPermissionSeeder extends Seeder
     {
         $permissions = [
             [
-                'name' => 'view_salary',
-                'label' => 'Просмотр зарплаты (выработки)',
+                'name' => 'image_view',
+                'label' => 'Фотографии',
             ],
-            [
-                'name' => 'view_tech_cards',
-                'label' => 'Просмотр тех-карт моделей',
-            ],
-            [
-                'name' => 'manage_warehouse',
-                'label' => 'Доступ к остаткам склада',
-            ],
-            [
-                'name' => 'create_order',
-                'label' => 'Оформление новых заказов',
-            ],
-            [
-                'name' => 'view_customer_orders',
-                'label' => 'Просмотр своих заказов (для клиентов)',
-            ],
+
         ];
 
         foreach ($permissions as $permission) {

@@ -45,12 +45,6 @@ class TechCardsRelationManager extends RelationManager
                     ->preload()
                     ->required(),
 
-                Select::make('material_texture_id')
-                    ->label('Текстура')
-                    ->options(MaterialTexture::pluck('name', 'id'))
-                    ->searchable()
-                    ->preload(),
-
                 Select::make('shoe_sole_id')
                     ->label('Подошва')
                     ->options(ShoeSole::pluck('name', 'id'))
@@ -83,12 +77,6 @@ class TechCardsRelationManager extends RelationManager
 
                 TextColumn::make('shoeModel.name')
                     ->label('Модель'),
-
-                TextColumn::make('materialTexture.name')
-                    ->label('Текстура')
-                    ->state(function ($record) {
-                        return MaterialTexture::find($record->material_texture_id)?->name ?? 'Не указано';
-                    }),
 
                 TextColumn::make('shoeSole.name')
                     ->label('Подошва'),

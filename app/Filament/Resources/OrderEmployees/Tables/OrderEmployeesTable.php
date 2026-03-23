@@ -14,6 +14,7 @@ class OrderEmployeesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->with(['employee', 'order.customer']))
             ->columns([
                 TextColumn::make('employee.fullName')
                     ->label('Сотрудник')
@@ -30,7 +31,7 @@ class OrderEmployeesTable
 
                 TextColumn::make('order_id')
                     ->label('Заказ')
-                    ->formatStateUsing(fn($record) => "{$record->order?->fullName} {$record->order->started_at->format('d.m.Y')}"),
+                    ->formatStateUsing(fn($record) => "{$record->order?->fullName} {$record->order?->started_at?->format('d.m.Y')}"),
 
                 TextColumn::make('quantity')
                     ->label('Пар')

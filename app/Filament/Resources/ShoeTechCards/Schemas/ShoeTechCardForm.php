@@ -22,11 +22,7 @@ class ShoeTechCardForm
                             ->schema([
                                 Select::make('shoe_model_id')
                                     ->label('Модель обуви')
-                                    ->relationship(
-                                        name: 'shoeModel',
-                                        titleAttribute: 'name', // По какому полю искать в БД
-                                        modifyQueryUsing: fn($query) => $query->with('shoeType') // Грузим тип заранее
-                                    )
+                                    ->relationship('shoeModel', 'name')
                                     ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
                                     ->required()
                                     ->searchable()
@@ -34,13 +30,17 @@ class ShoeTechCardForm
 
                                 Select::make('color_id')
                                     ->label('Цвет')
-                                    ->relationship('color', 'name')
+                                    ->relationship(
+                                        name: 'color',
+                                        titleAttribute: 'name',
+                                        modifyQueryUsing: fn($query) => $query->active()
+                                    )
+                                    //    ->getOptionLabelFromRecordUsing(fn($record) => $record->fullName)
                                     ->required()
                                     ->searchable()
                                     ->preload(),
                             ]),
 
-                        // Поле name теперь только для чтения, оно обновится после сохранения
                         TextInput::make('name')
                             ->label('Название спецификации')
                             ->placeholder('Сформируется автоматически после сохранения')
@@ -67,15 +67,15 @@ class ShoeTechCardForm
 
                 // Компоненты комплектующих на всю ширину
                 Grid::make(3)
-                    ->columns(3) // 3 колонки в строке
-                    ->columnSpanFull() // Занимает всю ширину
+                    ->columns(3)
+                    ->columnSpanFull()
                     ->schema([
                         Select::make('shoe_sole_id')
                             ->label('Подошва')
                             ->relationship(
                                 name: 'shoeSole',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: fn($query) => $query->with('color') // Убираем N+1 для цвета подошвы
+                                modifyQueryUsing: fn($query) => $query->with('color')
                             )
                             ->getOptionLabelFromRecordUsing(
                                 fn($record) => $record->fullName
@@ -89,7 +89,7 @@ class ShoeTechCardForm
                             ->relationship(
                                 name: 'material',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: fn($query) => $query->with('color') // Убираем N+1 для цвета материала
+                                modifyQueryUsing: fn($query) => $query->with('color')
                             )
                             ->getOptionLabelFromRecordUsing(
                                 fn($record) => $record->fullName

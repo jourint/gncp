@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 50)->unique(); // Цвет
             $table->string('hex', 7);           // HEX код цвета, например: #FFFFFF
+            $table->boolean('is_active')->default(true)->index();    // Активен ли цвет
         });
     }
 

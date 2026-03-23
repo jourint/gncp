@@ -16,7 +16,7 @@ class OrderPositionForm
             ->components([
                 Select::make('order_id')
                     ->label('Заказ')
-                    ->relationship('order', 'id', modifyQueryUsing: fn($query) => $query->orderBy('started_at', 'desc'))
+                    ->relationship('order', 'id', modifyQueryUsing: fn($query) => $query->with('customer')->orderBy('started_at', 'desc'))
                     ->getOptionLabelFromRecordUsing(fn(Order $record) => "{$record->fullName} ({$record->started_at->format('d.m.Y')})")
                     ->preload()
                     ->required(),
@@ -30,7 +30,7 @@ class OrderPositionForm
 
                 Select::make('material_lining_id')
                     ->label('Подкладка')
-                    ->relationship('materialLining', 'name')
+                    ->relationship('materialLining', 'name', modifyQueryUsing: fn($query) => $query->with('color'))
                     ->getOptionLabelFromRecordUsing(
                         fn($record) => $record->fullName
                     )

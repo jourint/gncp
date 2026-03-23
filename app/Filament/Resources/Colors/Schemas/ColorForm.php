@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Colors\Schemas;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
 class ColorForm
@@ -19,10 +20,10 @@ class ColorForm
                 ColorPicker::make('hex')
                     ->label('Палитра')
                     ->required()
-                    // Опционально: можно ограничить выбор только определенными цветами
-                    // ->colors(['#FFFFFF', '#000000', '#FF0000']) 
                     ->default('#ffffff'),
-                // TextInput::make('hex')->required(),
+                Toggle::make('is_active')
+                    ->label('Активен')
+                    ->default(true),
             ]);
     }
 }

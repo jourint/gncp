@@ -5,18 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\HasActiveScope;
 
 
 class Color extends Model
 {
+    use HasActiveScope;
+
     public $timestamps = false;
-    protected $fillable = ['name', 'hex'];
+    protected $fillable = ['name', 'hex', 'is_active'];
 
     protected function casts(): array
     {
         return [
             'name' => 'string',
             'hex' => 'string',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -50,5 +54,10 @@ class Color extends Model
     public function materialLinings(): HasMany
     {
         return $this->hasMany(MaterialLining::class);
+    }
+
+    public function getFullNameAttribute(): string
+    {
+        return "{$this->name} ({$this->hex})";
     }
 }

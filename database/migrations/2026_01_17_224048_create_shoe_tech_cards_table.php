@@ -19,7 +19,7 @@ return new class extends Migration
 
             $table->foreignId('shoe_sole_id')->constrained()->restrictOnDelete();    // Подошва
             $table->foreignId('material_id')->constrained()->restrictOnDelete();    // Материал основной
-            $table->foreignId('material_two_id')->nullable()->constrained()->restrictOnDelete();    // Материал основной
+            $table->foreignId('material_two_id')->nullable()->constrained('materials')->restrictOnDelete();    // Материал дополнительный
 
             $table->boolean('is_active')->default(true)->index();    // Активен ли техническая карта
             $table->string('image_path', 255)->nullable();        // Путь к изображению технической карты

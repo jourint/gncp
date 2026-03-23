@@ -14,6 +14,7 @@ class ColorsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 TextColumn::make('name')
                     ->label('Название цвета')
@@ -25,10 +26,18 @@ class ColorsTable
 
                 TextColumn::make('hex_code')
                     ->label('HEX код')
-                    ->getStateUsing(fn($record) => $record->hex) // Указываем брать данные из поля hex
+                    ->getStateUsing(fn($record) => $record->hex)
                     ->fontFamily('mono')
                     ->copyMessage('HEX код скопирован')
-                    ->copyable(), // Очень удобно для работы с дизайном
+                    ->copyable(),
+
+                TextColumn::make('is_active')
+                    ->label('Активен')
+                    ->badge()
+                    ->formatStateUsing(fn($state) => $state ? 'Да' : 'Нет')
+                    ->color(fn($state) => $state ? 'success' : 'danger')
+                    ->sortable()
+                    ->searchable(),
             ])
             ->filters([
                 //

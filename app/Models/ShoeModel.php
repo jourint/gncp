@@ -44,6 +44,12 @@ class ShoeModel extends Model
         return $this->hasMany(ShoeTechCard::class);
     }
 
+    // TODO: убрать дубли
+    public function techCards(): HasMany
+    {
+        return $this->hasMany(ShoeTechCard::class);
+    }
+
     public function shoeInsole(): BelongsTo
     {
         return $this->belongsTo(ShoeInsole::class);

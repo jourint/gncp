@@ -80,6 +80,9 @@ class ModelBuilder extends Page
                 'available_sizes' => collect($model->available_sizes ?? [])->map(fn($v) => (string)$v)->toArray(),
                 'workflows' => collect($model->workflows ?? [])->map(fn($v) => (string)$v)->toArray(),
                 'is_active' => (bool)$model->is_active,
+                'shoe_insole_id' => $model->shoe_insole_id,
+                'counter_id' => $model->counter_id,
+                'puff_id' => $model->puff_id,
             ];
             $this->selectedTechCardId = null;
             $this->selectedTechCardData = [];
@@ -116,8 +119,6 @@ class ModelBuilder extends Page
             ->limit(20)
             ->get();
     }
-
-
 
     public function getTechCardsProperty(): Collection
     {
@@ -204,6 +205,15 @@ class ModelBuilder extends Page
         $this->state['available_sizes'] = $sizes->contains($id)
             ? $sizes->reject(fn($v) => $v == $id)->values()->toArray()
             : $sizes->push((string)$id)->values()->toArray();
+    }
+
+    public function toggleWorkflow(int $id): void
+    {
+        $wf = collect($this->state['workflows']);
+
+        $this->state['workflows'] = $wf->contains($id)
+            ? $wf->reject(fn($v) => $v == $id)->values()->all()
+            : $wf->push((string)$id)->all();
     }
 
     protected function getHeaderActions(): array

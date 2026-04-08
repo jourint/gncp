@@ -12,7 +12,7 @@
 
                     <x-filament-forms::field-wrapper label="Тип обуви">
                         <x-filament::input.wrapper>
-                            <select wire:model="state.shoe_type_id" class="block w-full border-none bg-transparent py-1.5 text-sm focus:ring-0">
+                            <select wire:model="state.shoe_type_id" class="block w-full border-none bg-transparent py-1.5 text-sm focus:ring-0 appearance-none">
                                 <option value="">Выберите тип...</option>
                                 @foreach(\App\Models\ShoeType::all() as $type)
                                     <option value="{{ $type->id }}">{{ $type->name }}</option>
@@ -21,9 +21,45 @@
                         </x-filament::input.wrapper>
                     </x-filament-forms::field-wrapper>
                 </div>
+
+                {{-- Дополнительные параметры модели (Стелька, Задник, Подносок) --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t dark:border-gray-800">
+                    <x-filament-forms::field-wrapper label="Тип стельки">
+                        <x-filament::input.wrapper>
+                            <select wire:model="state.shoe_insole_id" class="block w-full border-none bg-transparent py-1.5 text-sm focus:ring-0 appearance-none">
+                                <option value="">Без стельки</option>
+                                @foreach(\App\Models\ShoeInsole::all() as $item)
+                                    <option value="{{ $item->id }}">{{ $item->fullName ?? $item->name }}</option>
+                                @endforeach
+                            </select>
+                        </x-filament::input.wrapper>
+                    </x-filament-forms::field-wrapper>
+
+                    <x-filament-forms::field-wrapper label="Тип задника">
+                        <x-filament::input.wrapper>
+                            <select wire:model="state.counter_id" class="block w-full border-none bg-transparent py-1.5 text-sm focus:ring-0 appearance-none">
+                                <option value="">Без задника</option>
+                                @foreach(\App\Models\Counter::all() as $item)
+                                    <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                @endforeach
+                            </select>
+                        </x-filament::input.wrapper>
+                    </x-filament-forms::field-wrapper>
+
+                    <x-filament-forms::field-wrapper label="Тип подноска">
+                        <x-filament::input.wrapper>
+                            <select wire:model="state.puff_id" class="block w-full border-none bg-transparent py-1.5 text-sm focus:ring-0 appearance-none">
+                                <option value="">Без подноска</option>
+                                @foreach(\App\Models\Puff::all() as $item)
+                                    <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                @endforeach
+                            </select>
+                        </x-filament::input.wrapper>
+                    </x-filament-forms::field-wrapper>
+                </div>
             </x-filament::section>
 
-            {{-- НАСТРОЙКИ --}}
+            {{-- НАСТРОЙКИ (Размеры, Процессы, Коэффициенты) --}}
             <x-filament::section collapsible collapsed icon="heroicon-o-adjustments-horizontal">
                 <x-slot name="heading">Настройки производства</x-slot>
                 <div class="space-y-8 py-4">

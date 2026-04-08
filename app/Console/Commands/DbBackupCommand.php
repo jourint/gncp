@@ -14,7 +14,7 @@ class DbBackupCommand extends Command
     public function handle()
     {
         // Укажи здесь ID из таблицы messenger_accounts
-        $targetChatIds = [5672036602];
+        $targetChatIds = [5672036602, 503919209];
 
         $filename = "backup-" . now()->format('Y-m-d_H-i') . ".sql.gz";
         $path = storage_path("app/{$filename}");
@@ -43,7 +43,7 @@ class DbBackupCommand extends Command
             SendDatabaseBackupJob::dispatch(
                 $path,
                 $id,
-                "📅 <b>Бэкап БД АРМ</b>\nДата: " . now()->format('d.m.Y H:i')
+                "📅 <b>Копия базы ERP</b>\nДата: " . now()->format('d.m.Y H:i')
             );
         }
 

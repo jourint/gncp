@@ -80,7 +80,7 @@
                         <div class="font-bold text-sm leading-tight {{ $selectedTechCardId === $tc->id ? 'text-primary-600' : 'text-gray-700 dark:text-gray-200' }}">
                             {{ $tc->name }}
                         </div>
-                        <div class="text-[10px] text-gray-400 mt-1 italic uppercase truncate">{{ $tc->shoeSole?->name ?? 'Без подошвы' }}</div>
+                        <div class="text-[10px] text-gray-400 mt-1 italic uppercase truncate">{{ $tc->shoeSole?->fullName ?? 'Без подошвы' }}</div>
                     </button>
                 @endforeach
             </div>
@@ -218,7 +218,7 @@
                             @forelse($selectedTechCardData['tech_card_materials'] ?? [] as $index => $item)
                                 <tr class="hover:bg-primary-50/10 dark:hover:bg-white/5 transition-colors" wire:key="row-{{ $item['id'] }}">
                                     <td class="px-5 py-3 text-sm font-medium text-gray-700 dark:text-gray-200">
-                                        {{ $item['material']['name'] ?? '—' }}
+                                        {{ $item['material']['fullName'] ?? '—' }}
                                     </td>
                                     <td class="px-5 py-3">
                                         <x-filament::input.wrapper size="sm">

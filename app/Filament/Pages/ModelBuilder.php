@@ -105,24 +105,51 @@ class ModelBuilder extends Page
     // 
     public function getFilteredMaterialsProperty(): Collection
     {
-        // Определяем, по какому полю идет поиск в данный момент
-        $query = match (true) {
-            $this->showMat1Dropdown => $this->mat1Search,
-            $this->showMat2Dropdown => $this->mat2Search,
-            $this->showCompositionDropdown => $this->compositionSearch,
-            // Если ни одно из окон редактирования не открыто, значит мы в панели создания
-            default => ($this->newTcMat1Search ?: $this->newTcMat2Search),
-        };
+        // По умолчанию берем пустую строку
+        $searchTerm = '';
 
-        return Material::where('is_active', true)
-            ->when($query, fn($q) => $q->where('name', 'ilike', "%{$query}%"))
+        // Определяем, какой поиск сейчас активен, основываясь на открытых дропдаунах
+        if ($this->showCompositionDropdown) {
+            $searchTerm = $this->compositionSearch;
+        } elseif ($this->showMat1Dropdown) {
+            $searchTerm = $this->mat1Search;
+        } elseif ($this->showMat2Dropdown) {
+            $searchTerm = $this->mat2Search;
+        } elseif ($this->newTcMat1Search) {
+            $searchTerm = $this->newTcMat1Search;
+        } elseif ($this->newTcMat2Search) {
+            $searchTerm = $this->newTcMat2Search;
+        }
+
+        return Material::query()
+            ->with(['color'])
+            ->where('is_active', true)
+            ->when(filled($searchTerm), function ($q) use ($searchTerm) {
+                $q->where('name', 'ilike', "%{$searchTerm}%");
+            })
             ->limit(20)
             ->get();
     }
 
+    public function openSearch($type)
+    {
+        // Сбрасываем все флаги
+        $this->showMat1Dropdown = false;
+        $this->showMat2Dropdown = false;
+        $this->showCompositionDropdown = false;
+
+        // Открываем нужный
+        if (property_exists($this, $type)) {
+            $this->$type = true;
+        }
+    }
+
     public function getTechCardsProperty(): Collection
     {
-        return $this->activeModelId ? ShoeTechCard::where('shoe_model_id', $this->activeModelId)->orderBy('id', 'asc')->get() : collect();
+        return $this->activeModelId ? ShoeTechCard::where('shoe_model_id', $this->activeModelId)
+            ->with(['shoeSole.color', 'material.color', 'materialTwo.color'])
+            ->orderBy('id', 'asc')
+            ->get() : collect();
     }
 
     public function getFilteredColorsProperty(): Collection
@@ -138,6 +165,7 @@ class ModelBuilder extends Page
     {
         $query = $this->showSoleDropdown ? $this->soleSearch : $this->newTcSoleSearch;
         return ShoeSole::where('is_active', true)
+            ->with(['color'])
             ->when($query, fn($q) => $q->where('name', 'ilike', "%{$query}%"))
             ->limit(20)->get();
     }

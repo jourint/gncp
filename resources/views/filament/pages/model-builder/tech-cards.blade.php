@@ -179,7 +179,7 @@
                         <div x-data="{ open: @entangle('showMat1Dropdown') }" class="relative z-[130]">
                             <label class="text-[10px] font-bold text-gray-400 uppercase ml-0.5">Материал 1 (Осн)</label>
                             <x-filament::input.wrapper size="sm">
-                                <x-filament::input type="text" wire:model.live.debounce.250ms="mat1Search" x-on:focus="open = true" x-on:click.away="open = false" />
+                                <x-filament::input type="text" wire:model.live.debounce.250ms="mat1Search" x-on:focus="open = true; $wire.openSearch('showMat1Dropdown')" x-on:click.away="open = false" />
                             </x-filament::input.wrapper>
                             <div x-show="open" x-transition class="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-2xl max-h-48 overflow-y-auto z-[140]">
                                 @foreach($this->filteredMaterials as $item)
@@ -191,7 +191,7 @@
                         <div x-data="{ open: @entangle('showMat2Dropdown') }" class="relative z-[120]">
                             <label class="text-[10px] font-bold text-gray-400 uppercase ml-0.5">Материал 2 (Доп)</label>
                             <x-filament::input.wrapper size="sm">
-                                <x-filament::input type="text" wire:model.live.debounce.250ms="mat2Search" x-on:focus="open = true" x-on:click.away="open = false" />
+                                <x-filament::input type="text" wire:model.live.debounce.250ms="mat2Search" x-on:focus="open = true; $wire.openSearch('showMat2Dropdown')" x-on:click.away="open = false" />
                             </x-filament::input.wrapper>
                             <div x-show="open" x-transition class="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-2xl max-h-48 overflow-y-auto z-[130]">
                                 @foreach($this->filteredMaterials as $item)
@@ -205,7 +205,8 @@
                     <div class="mt-6 pt-5 border-t dark:border-gray-800 relative" x-data="{ open: false }">
                         <label class="text-[10px] font-bold text-primary-500 uppercase ml-1 tracking-wider">Добавить в состав</label>
                         <x-filament::input.wrapper size="sm" :inner-prefix-icon="'heroicon-m-magnifying-glass'">
-                            <x-filament::input type="text" placeholder="Поиск материала..." wire:model.live.debounce.300ms="compositionSearch" x-on:focus="open = true" x-on:click.away="open = false" />
+                            <x-filament::input type="text" placeholder="Поиск материала..." wire:model.live.debounce.300ms="compositionSearch" 
+                                x-on:focus="open = true; $wire.openSearch('showCompositionDropdown')" x-on:click.away="open = false" />
                         </x-filament::input.wrapper>
                         <div x-show="open && $wire.compositionSearch.length >= 2" class="absolute z-[200] w-full mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
                             @forelse($this->filteredMaterials as $mat)

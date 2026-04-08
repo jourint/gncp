@@ -193,7 +193,7 @@ class ModelBuilder extends Page
     {
         if (!$this->selectedTechCardId) return;
         $this->validate(['tcImage' => 'image|max:2048']);
-        $path = $this->tcImage->store('shoe-tech-cards', 'public');
+        $path = $this->tcImage->store('tech-cards', 'public');
         ShoeTechCard::where('id', $this->selectedTechCardId)->update(['image_path' => $path]);
         $this->selectedTechCardData['image_path'] = $path;
         Notification::make()->title('Фото обновлено')->success()->send();

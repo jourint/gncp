@@ -1,6 +1,6 @@
 <div class="mt-12 space-y-4" wire:key="tech-cards-area">
     
-    {{-- 1. ПАНЕЛЬ БЫСТРОГО СОЗДАНИЯ (Восстановлена полностью) --}}
+    {{-- 1. ПАНЕЛЬ БЫСТРОГО СОЗДАНИЯ --}}
     <x-filament::section collapsible collapsed class="border-t-4 border-t-success-500">
         <x-slot name="heading">Создать новую техкарту</x-slot>
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
@@ -35,7 +35,6 @@
 
             {{-- Материалы (Создание) --}}
             <div class="md:col-span-2 grid grid-cols-2 gap-2">
-                {{-- Мат 1 --}}
                 <div class="relative" x-data="{ open: false }">
                     <x-filament-forms::field-wrapper label="Материал 1">
                         <x-filament::input.wrapper>
@@ -48,7 +47,6 @@
                         @endforeach
                     </div>
                 </div>
-                {{-- Мат 2 --}}
                 <div class="relative" x-data="{ open: false }">
                     <x-filament-forms::field-wrapper label="Материал 2">
                         <x-filament::input.wrapper>
@@ -87,7 +85,7 @@
         </div>
 
         {{-- РЕДАКТОР (ПРАВО) --}}
-        <div class="lg:col-span-8 bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl flex flex-col overflow-hidden shadow-sm">
+        <div class="lg:col-span-8 bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl flex flex-col overflow-hidden shadow-sm" x-data="{ imgPreview: false }">
             @if($selectedTechCardId)
                 
                 <div class="p-5 border-b dark:border-gray-800 bg-gray-50/50">
@@ -114,32 +112,46 @@
                             </div>
                         </div>
 
-                        {{-- ФОТО --}}
+                        {{-- ФОТО С ПРОСМОТРОМ --}}
                         <div class="md:col-span-3">
                             <div class="relative group h-28 bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center transition-all">
                                 @if(!empty($selectedTechCardData['image_path']))
-                                    {{-- Используем Storage::url для автоматического формирования правильного пути --}}
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($selectedTechCardData['image_path']) }}?v={{ time() }}" 
-                                        class="w-full h-full object-cover shadow-inner"
-                                        onerror="this.src='https://placehold.co/400x400?text=Ошибка+пути'">
-                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 px-2">
-                                        <button onclick="document.getElementById('tc-image-upload').click()" class="w-full text-[10px] font-bold text-white bg-primary-500 py-1.5 rounded uppercase hover:bg-primary-400 shadow-sm transition-colors">Сменить</button>
-                                        <button wire:click="deleteTcImage" class="w-full text-[10px] font-bold text-white bg-danger-600 py-1.5 rounded uppercase hover:bg-danger-500 shadow-sm transition-colors">Удалить</button>
+                                    @php $fullImageUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($selectedTechCardData['image_path']); @endphp
+                                    
+                                    <img src="{{ $fullImageUrl }}?v={{ time() }}" 
+                                        @click="imgPreview = true"
+                                        class="w-full h-full object-cover cursor-zoom-in hover:opacity-90 transition-opacity">
+                                    
+                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 px-2 pointer-events-none">
+                                        <div class="flex gap-2 pointer-events-auto">
+                                            <button onclick="document.getElementById('tc-image-upload').click()" class="px-2 py-1 text-[9px] font-bold text-white bg-primary-500 rounded uppercase hover:bg-primary-400 shadow-sm transition-colors">Сменить</button>
+                                            <button wire:click="deleteTcImage" class="px-2 py-1 text-[9px] font-bold text-white bg-danger-600 rounded uppercase hover:bg-danger-500 shadow-sm transition-colors">Удалить</button>
+                                        </div>
                                     </div>
+
+                                    {{-- Lightbox --}}
+                                    <template x-teleport="body">
+                                        <div x-show="imgPreview" 
+                                             x-transition.opacity
+                                             class="fixed inset-0 z-[999] flex items-center justify-center bg-black/90 p-4"
+                                             @keydown.escape.window="imgPreview = false">
+                                            <button @click="imgPreview = false" class="absolute top-5 right-5 text-white/70 hover:text-white transition-colors">
+                                                <x-filament::icon icon="heroicon-o-x-mark" class="w-10 h-10" />
+                                            </button>
+                                            <img src="{{ $fullImageUrl }}" class="max-w-full max-h-full rounded-lg shadow-2xl" @click.away="imgPreview = false">
+                                        </div>
+                                    </template>
                                 @else
                                     <x-filament::icon icon="heroicon-o-camera" class="w-8 h-8 text-gray-400 mb-2" />
                                     <button onclick="document.getElementById('tc-image-upload').click()" class="text-[9px] font-bold uppercase text-gray-500 hover:text-primary-500">Загрузить фото</button>
                                 @endif
-                                {{-- Скрытый инпут для загрузки --}}
                                 <input type="file" id="tc-image-upload" class="hidden" wire:model.live="tcImage" accept="image/*">
                             </div>
                         </div>
                     </div>
 
-                    {{-- СЕЛЕКТЫ РЕДАКТИРОВАНИЯ (С поддержкой entangle для мгновенного открытия) --}}
+                    {{-- СЕЛЕКТЫ РЕДАКТИРОВАНИЯ --}}
                     <div class="mt-7 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 px-2">
-                        
-                        {{-- Поле: Цвет --}}
                         <div x-data="{ open: @entangle('showColorDropdown') }" class="relative z-[150]">
                             <label class="text-[10px] font-bold text-gray-400 uppercase ml-0.5">Цвет изделия</label>
                             <x-filament::input.wrapper size="sm">
@@ -152,7 +164,6 @@
                             </div>
                         </div>
 
-                        {{-- Поле: Подошва --}}
                         <div x-data="{ open: @entangle('showSoleDropdown') }" class="relative z-[140]">
                             <label class="text-[10px] font-bold text-gray-400 uppercase ml-0.5">Тип подошвы</label>
                             <x-filament::input.wrapper size="sm">
@@ -160,12 +171,11 @@
                             </x-filament::input.wrapper>
                             <div x-show="open" x-transition class="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-2xl max-h-48 overflow-y-auto z-[150]">
                                 @foreach($this->filteredSoles as $item)
-                                    <button type="button" wire:click="updateTechCardField('shoe_sole_id', {{ $item->id }}, 'soleSearch', '{{ $item->name }}'); open = false" class="w-full text-left px-3 py-2 text-xs hover:bg-primary-600 hover:text-white border-b last:border-0 dark:border-gray-700 transition-colors"> {{ $item->name }} </button>
+                                    <button type="button" wire:click="updateTechCardField('shoe_sole_id', {{ $item->id }}, 'soleSearch', '{{ $item->name }}'); open = false" class="w-full text-left px-3 py-2 text-xs hover:bg-primary-600 hover:text-white border-b last:border-0 dark:border-gray-700 transition-colors"> {{ $item->fullName }} </button>
                                 @endforeach
                             </div>
                         </div>
 
-                        {{-- Поле: Материал 1 --}}
                         <div x-data="{ open: @entangle('showMat1Dropdown') }" class="relative z-[130]">
                             <label class="text-[10px] font-bold text-gray-400 uppercase ml-0.5">Материал 1 (Осн)</label>
                             <x-filament::input.wrapper size="sm">
@@ -173,12 +183,11 @@
                             </x-filament::input.wrapper>
                             <div x-show="open" x-transition class="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-2xl max-h-48 overflow-y-auto z-[140]">
                                 @foreach($this->filteredMaterials as $item)
-                                    <button type="button" wire:click="updateTechCardField('material_id', {{ $item->id }}, 'mat1Search', '{{ $item->name }}'); open = false" class="w-full text-left px-3 py-2 text-xs hover:bg-primary-600 hover:text-white border-b last:border-0 dark:border-gray-700 transition-colors"> {{ $item->name }} </button>
+                                    <button type="button" wire:click="updateTechCardField('material_id', {{ $item->id }}, 'mat1Search', '{{ $item->fullName }}'); open = false" class="w-full text-left px-3 py-2 text-xs hover:bg-primary-600 hover:text-white border-b last:border-0 dark:border-gray-700 transition-colors"> {{ $item->fullName }} </button>
                                 @endforeach
                             </div>
                         </div>
 
-                        {{-- Поле: Материал 2 --}}
                         <div x-data="{ open: @entangle('showMat2Dropdown') }" class="relative z-[120]">
                             <label class="text-[10px] font-bold text-gray-400 uppercase ml-0.5">Материал 2 (Доп)</label>
                             <x-filament::input.wrapper size="sm">
@@ -186,7 +195,7 @@
                             </x-filament::input.wrapper>
                             <div x-show="open" x-transition class="absolute left-0 right-0 mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-2xl max-h-48 overflow-y-auto z-[130]">
                                 @foreach($this->filteredMaterials as $item)
-                                    <button type="button" wire:click="updateTechCardField('material_two_id', {{ $item->id }}, 'mat2Search', '{{ $item->name }}'); open = false" class="w-full text-left px-3 py-2 text-xs hover:bg-primary-600 hover:text-white border-b last:border-0 dark:border-gray-700 transition-colors"> {{ $item->name }} </button>
+                                    <button type="button" wire:click="updateTechCardField('material_two_id', {{ $item->id }}, 'mat2Search', '{{ $item->fullName }}'); open = false" class="w-full text-left px-3 py-2 text-xs hover:bg-primary-600 hover:text-white border-b last:border-0 dark:border-gray-700 transition-colors"> {{ $item->fullName }} </button>
                                 @endforeach
                             </div>
                         </div>
@@ -250,8 +259,3 @@
         </div>
     </div>
 </div>
-
-<style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.4); border-radius: 2px; }
-</style>

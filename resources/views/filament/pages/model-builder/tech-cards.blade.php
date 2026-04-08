@@ -119,8 +119,7 @@
                             <div class="relative group h-28 bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center transition-all">
                                 @if(!empty($selectedTechCardData['image_path']))
                                     {{-- Используем Storage::url для автоматического формирования правильного пути --}}
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($selectedTechCardData['image_path']) }}?v={{ time() }}" 
-                                        class="w-full h-full object-cover shadow-inner">
+                                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($selectedTechCardData['image_path']) }}?v={{ time() }}" class="w-full h-full object-cover">
                                     
                                     <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 px-2">
                                         <button onclick="document.getElementById('tc-image-upload').click()" class="w-full text-[10px] font-bold text-white bg-primary-500 py-1.5 rounded uppercase hover:bg-primary-400 shadow-sm transition-colors">Сменить</button>

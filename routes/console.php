@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Чистка старых записей Telescope ежедневно
 Schedule::command('telescope:prune')->daily();
+
+// Запуск бэкапа каждый день в 3 часа ночи
+Schedule::command('db:backup-tg')->dailyAt('03:00');

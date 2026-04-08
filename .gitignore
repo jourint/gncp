@@ -4,6 +4,7 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/app/*.sql.gz
 /storage/pail
 /vendor
 .env

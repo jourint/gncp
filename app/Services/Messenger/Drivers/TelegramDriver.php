@@ -73,6 +73,31 @@ class TelegramDriver extends AbstractMessengerDriver
         return !empty($response['ok']);
     }
 
+    public function sendDocument(string $chatId, string $path, string $caption = '', array $options = []): bool
+    {
+        // Проверяем наличие файла локально (так как бэкап лежит в storage/app)
+        if (!file_exists($path)) {
+            $this->lastError = "File not found: {$path}";
+            return false;
+        }
+
+        $response = $this->api('sendDocument', [
+            'chat_id'    => $chatId,
+            'caption'    => $caption,
+            'parse_mode' => $options['parse_mode'] ?? 'HTML',
+            // Используем твою структуру для multipart запросов
+            'multipart' => [
+                [
+                    'name'     => 'document',
+                    'contents' => fopen($path, 'r'),
+                    'filename' => basename($path),
+                ]
+            ]
+        ]);
+
+        return !empty($response['ok']);
+    }
+
     public function parseRequest(array $rawData): IncomingMessage
     {
         // Извлекаем данные либо из обычного сообщения, либо из коллбэка кнопки

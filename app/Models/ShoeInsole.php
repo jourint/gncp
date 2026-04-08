@@ -9,6 +9,7 @@ use App\Enums\InsolesType;
 class ShoeInsole extends Model
 {
     protected $fillable = ['name', 'is_soft_texon', 'has_egg', 'type', 'is_active'];
+    protected $appends = ['fullName'];
 
     protected function casts(): array
     {

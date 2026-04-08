@@ -17,6 +17,9 @@ interface MessengerDriverInterface
      */
     public function sendPhoto(string $chatId, string $path, string $caption = '', array $options = []): bool;
 
+    public function sendDocument(string $chatId, string $path, string $caption = '', array $options = []): bool;
+
+
     /**
      * Генерация ссылки для приглашения по токену.
      */

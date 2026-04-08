@@ -20,6 +20,7 @@ class ShoeModel extends Model
         'workflows',
         'is_active',
     ];
+    protected $appends = ['fullName'];
 
     protected function casts(): array
     {

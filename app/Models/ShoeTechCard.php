@@ -18,6 +18,7 @@ class ShoeTechCard extends Model
         'is_active',
         'image_path',
     ];
+    protected $appends = ['fullName'];
 
     protected function casts(): array
     {
@@ -30,8 +31,20 @@ class ShoeTechCard extends Model
     protected static function booted()
     {
         static::saving(function ($techCard) {
-            $techCard->loadMissing(['shoeModel.shoeType', 'color']);
-            $techCard->name = $techCard->fullName;
+            // 1. Принудительно подгружаем свежие названия для формирования имени, 
+            // даже если связи еще не были инициализированы или устарели.
+
+            $model = \App\Models\ShoeModel::with('shoeType')->find($techCard->shoe_model_id);
+            $color = \App\Models\Color::find($techCard->color_id);
+            $material = \App\Models\Material::find($techCard->material_id);
+
+            $modelName = $model?->name ?? 'Неизвестная модель';
+            $typeName = $model?->shoeType?->name ? "({$model->shoeType->name})" : "";
+            $matName = $material?->name ?? 'Без материала';
+            $colorName = $color?->name ? "({$color->name})" : "";
+
+            // Формируем результат: Эстер (Ботинки) / Кожа (Красный)
+            $techCard->name = "{$modelName} {$typeName} / {$matName} {$colorName}";
         });
     }
 

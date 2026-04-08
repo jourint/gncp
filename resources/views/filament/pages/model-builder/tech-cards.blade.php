@@ -118,7 +118,10 @@
                         <div class="md:col-span-3">
                             <div class="relative group h-28 bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center transition-all">
                                 @if(!empty($selectedTechCardData['image_path']))
-                                    <img src="{{ asset('storage/' . $selectedTechCardData['image_path']) }}?v={{ time() }}" class="w-full h-full object-cover shadow-inner">
+                                    {{-- Используем Storage::url для автоматического формирования правильного пути --}}
+                                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($selectedTechCardData['image_path']) }}?v={{ time() }}" 
+                                        class="w-full h-full object-cover shadow-inner">
+                                    
                                     <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 px-2">
                                         <button onclick="document.getElementById('tc-image-upload').click()" class="w-full text-[10px] font-bold text-white bg-primary-500 py-1.5 rounded uppercase hover:bg-primary-400 shadow-sm transition-colors">Сменить</button>
                                         <button wire:click="deleteTcImage" class="w-full text-[10px] font-bold text-white bg-danger-600 py-1.5 rounded uppercase hover:bg-danger-500 shadow-sm transition-colors">Удалить</button>
@@ -127,7 +130,8 @@
                                     <x-filament::icon icon="heroicon-o-camera" class="w-8 h-8 text-gray-400 mb-2" />
                                     <button onclick="document.getElementById('tc-image-upload').click()" class="text-[9px] font-bold uppercase text-gray-500 hover:text-primary-500">Загрузить фото</button>
                                 @endif
-                                <input type="file" id="tc-image-upload" class="hidden" wire:model="tcImage" accept="image/*">
+                                {{-- Скрытый инпут для загрузки --}}
+                                <input type="file" id="tc-image-upload" class="hidden" wire:model.live="tcImage" accept="image/*">
                             </div>
                         </div>
                     </div>

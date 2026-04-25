@@ -13,9 +13,10 @@ class DbBackupCommand extends Command
 
     public function handle()
     {
-        // Укажи здесь ID из таблицы messenger_accounts
-        $targetChatIds = [5672036602, 503919209];
-
+        $targetChatIds = [
+            5672036602, // 
+            503919209
+        ];
         $filename = "backup-" . now()->format('Y-m-d_H-i') . ".sql.gz";
         $path = storage_path("app/{$filename}");
 
@@ -23,22 +24,37 @@ class DbBackupCommand extends Command
 
         $db = config('database.connections.pgsql');
 
-        // Создаем дамп
-        Process::run(sprintf(
-            'PGPASSWORD="%s" pg_dump -U %s -h %s %s | gzip > %s',
-            $db['password'],
+        // 1. Используем массив для команды, чтобы Laravel сам обработал экранирование
+        // 2. Добавляем флаг -w (no-password), так как пароль передаем через переменную окружения
+        // 3. Добавляем путь к дампу, если он не в $PATH (опционально)
+        $command = sprintf(
+            'pg_dump -U %s -h %s -p %s -w %s | gzip > %s',
             $db['username'],
             $db['host'],
+            $db['port'] ?? '5432',
             $db['database'],
-            $path
-        ));
+            escapeshellarg($path)
+        );
 
-        if (!file_exists($path)) {
-            $this->error("Ошибка: Файл бэкапа не был создан.");
+        $result = Process::env([
+            'PGPASSWORD' => $db['password']
+        ])->run($command);
+
+        // Проверяем результат
+        if (!$result->successful()) {
+            $this->error("Ошибка дампа (код {$result->exitCode()}):");
+            $this->error($result->errorOutput());
             return;
         }
 
-        // Ставим задачи в очередь для каждого получателя
+        // Дополнительная проверка на пустой файл
+        if (!file_exists($path) || filesize($path) <= 20) {
+            $this->error("Ошибка: Файл создан, но он пустой. Проверьте права пользователя БД.");
+            return;
+        }
+
+        $this->info("Дамп успешно создан. Размер: " . filesize($path) . " байт.");
+
         foreach ($targetChatIds as $id) {
             SendDatabaseBackupJob::dispatch(
                 $path,
@@ -47,13 +63,12 @@ class DbBackupCommand extends Command
             );
         }
 
-        // Отложенная задача на удаление через 10 минут
         dispatch(function () use ($path) {
             if (file_exists($path)) {
                 unlink($path);
             }
         })->delay(now()->addMinutes(10));
 
-        $this->info("Дамп готов. 10-минутный таймер очистки запущен.");
+        $this->info("Задачи на отправку добавлены в очередь.");
     }
 }

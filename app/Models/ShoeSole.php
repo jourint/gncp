@@ -13,6 +13,7 @@ class ShoeSole extends Model
         'color_id',
         'is_active',
     ];
+    protected $with = ['color'];
     protected $appends = ['fullName'];
 
     protected function casts(): array

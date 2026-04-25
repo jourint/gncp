@@ -17,6 +17,7 @@ class Material extends Model
         'is_active',
         //    'stock_quantity'
     ];
+    protected $with = ['color'];
     protected $appends = ['fullName'];
 
     protected function casts(): array
